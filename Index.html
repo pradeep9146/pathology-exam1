@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pathology AVN Questions</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#f0f4f8;--surface:#fff;--header:#1a237e;
+--accent:#1565c0;--accent2:#0d47a1;--border:#d0d9e8;
+--text:#1a1a2e;--subtext:#555;--answered:#2e7d32;--marked:#6a1b9a;
+--marked-ans:#1565c0;--unattempted:#c62828;--not-visited:#607d8b;
+--option-hover:#e3eaf5;--option-sel:#bbdefb;--option-border:#1565c0;
+--footer-bg:#1a237e;--timer-warn:#e65100;
+--shadow:0 2px 12px rgba(26,35,126,.10);
+--online:#2e7d32;--offline:#c62828;--pending:#e65100;
+}
+.dark{
+--bg:#0d1117;--surface:#161b22;--header:#0d1b4b;
+--accent:#42a5f5;--accent2:#1565c0;--border:#30363d;
+--text:#e6edf3;--subtext:#8b949e;--option-hover:#1f2a38;--option-sel:#1a3a5c;
+--footer-bg:#0d1b4b;--shadow:0 2px 12px rgba(0,0,0,.4);
+}
+html,body{height:100%;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
+
+/* ===== CONSENT SCREEN ===== */
+#consent-page{
+  display:none;position:fixed;inset:0;z-index:900;
+  background:linear-gradient(135deg,#0d1b4b 0%,#1a237e 50%,#1565c0 100%);
+  align-items:center;justify-content:center;padding:20px;
+}
+.consent-card{
+  background:#fff;border-radius:20px;padding:36px 32px;max-width:520px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);position:relative;overflow:hidden;
+  animation:slideUp .4s ease;
+}
+.dark .consent-card{background:#161b22}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.consent-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#1a237e,#42a5f5,#e65100,#1a237e)}
+.consent-icon{font-size:3rem;text-align:center;margin-bottom:16px}
+.consent-title{font-size:1.3rem;font-weight:800;color:#1a237e;text-align:center;margin-bottom:8px}
+.dark .consent-title{color:#42a5f5}
+.consent-subtitle{font-size:.82rem;color:#607d8b;text-align:center;margin-bottom:20px}
+.consent-box{
+  background:#f0f4f8;border-radius:12px;padding:18px;margin-bottom:20px;
+  border-left:4px solid #1565c0;font-size:.9rem;line-height:1.6;color:#1a1a2e;
+}
+.dark .consent-box{background:#0d1117;color:#e6edf3;border-left-color:#42a5f5}
+.consent-data-list{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.consent-data-list span{font-size:.78rem;color:#555;display:flex;align-items:center;gap:5px}
+.dark .consent-data-list span{color:#8b949e}
+.consent-data-list span::before{content:'•';color:#1565c0;font-weight:900}
+.consent-check-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;cursor:pointer;padding:10px;border-radius:8px;border:2px solid var(--border);transition:border-color .2s}
+.consent-check-row:hover{border-color:#1565c0}
+.consent-check-row.checked{border-color:#2e7d32;background:#f1f8f1}
+.dark .consent-check-row.checked{background:#1b2e1b}
+.consent-check-row input[type=checkbox]{width:18px;height:18px;flex-shrink:0;cursor:pointer;accent-color:#1565c0;margin-top:2px}
+.consent-check-label{font-size:.85rem;line-height:1.5;color:#1a1a2e;cursor:pointer}
+.dark .consent-check-label{color:#e6edf3}
+.consent-btns{display:flex;gap:10px}
+.consent-accept{flex:2;background:linear-gradient(135deg,#1a237e,#1565c0);color:#fff;border:none;border-radius:10px;padding:13px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;opacity:.5;pointer-events:none}
+.consent-accept.enabled{opacity:1;pointer-events:auto}
+.consent-accept.enabled:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(21,101,192,.4)}
+.consent-decline{flex:1;background:transparent;color:#607d8b;border:2px solid #d0d9e8;border-radius:10px;padding:13px;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
+.consent-decline:hover{border-color:#c62828;color:#c62828}
+
+/* ===== REGISTRATION PAGE ===== */
+#reg-page{
+  display:flex;flex-direction:column;min-height:100vh;
+  background:linear-gradient(135deg,#1a237e 0%,#1565c0 50%,#0d47a1 100%);
+  align-items:center;justify-content:center;padding:20px;
+}
+.reg-card{
+  background:#fff;border-radius:20px;padding:36px 32px;max-width:480px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;overflow:hidden;
+  animation:slideUp .4s ease;
+}
+.dark .reg-card{background:#161b22;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.reg-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#1a237e,#42a5f5,#1a237e)}
+.reg-logo{text-align:center;margin-bottom:24px}
+.reg-logo-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1a237e,#1565c0);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.8rem;box-shadow:0 4px 16px rgba(21,101,192,.4)}
+.reg-logo h2{font-size:1.25rem;font-weight:800;color:#1a237e;line-height:1.3}
+.dark .reg-logo h2{color:#42a5f5}
+.reg-logo p{font-size:.8rem;color:#607d8b;margin-top:4px;font-weight:500}
+.reg-divider{height:1px;background:linear-gradient(90deg,transparent,#d0d9e8,transparent);margin:20px 0}
+.reg-field{margin-bottom:18px}
+.reg-label{display:block;font-size:.82rem;font-weight:700;color:#1a237e;margin-bottom:6px;letter-spacing:.03em}
+.dark .reg-label{color:#90caf9}
+.req-star{color:#c62828;margin-left:2px}
+.reg-input{width:100%;border:2px solid #d0d9e8;border-radius:10px;padding:12px 14px;font-size:.95rem;font-family:inherit;background:#f8fafc;color:#1a1a2e;transition:border-color .2s,box-shadow .2s;outline:none}
+.dark .reg-input{background:#0d1117;color:#e6edf3;border-color:#30363d}
+.reg-input:focus{border-color:#1565c0;box-shadow:0 0 0 3px rgba(21,101,192,.15);background:#fff}
+.dark .reg-input:focus{background:#161b22;box-shadow:0 0 0 3px rgba(66,165,245,.15)}
+.reg-input.error{border-color:#c62828;box-shadow:0 0 0 3px rgba(198,40,40,.12)}
+.reg-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231565c0' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer}
+.field-err{font-size:.75rem;color:#c62828;margin-top:5px;display:none;font-weight:600}
+.field-err.show{display:block}
+.opt-badge{font-size:.72rem;color:#607d8b;font-weight:500;margin-left:4px}
+.reg-btn{width:100%;background:linear-gradient(135deg,#1a237e,#1565c0);color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px;letter-spacing:.03em;box-shadow:0 4px 16px rgba(21,101,192,.3)}
+.reg-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(21,101,192,.45)}
+.reg-footer-note{text-align:center;font-size:.75rem;color:#607d8b;margin-top:14px}
+
+/* Session recovery banner */
+.recovery-banner{
+  background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:12px;
+  padding:14px 16px;margin-bottom:20px;border-left:4px solid #e65100;display:none;
+}
+.dark .recovery-banner{background:linear-gradient(135deg,#2e1a00,#3e2400);border-left-color:#ff9800}
+.recovery-banner p{font-size:.85rem;color:#bf360c;font-weight:600;margin-bottom:8px}
+.dark .recovery-banner p{color:#ffb74d}
+.recovery-banner .rb-btns{display:flex;gap:8px}
+.rb-btn{border:none;border-radius:7px;padding:7px 14px;font-size:.8rem;font-weight:700;cursor:pointer}
+.rb-resume{background:#e65100;color:#fff}
+.rb-discard{background:#d0d9e8;color:#555}
+
+/* ===== RANGE SELECTION PAGE ===== */
+#range-page{
+  display:none;flex-direction:column;min-height:100vh;
+  background:linear-gradient(135deg,#1a237e 0%,#1565c0 50%,#0d47a1 100%);
+  align-items:center;justify-content:center;padding:20px;
+}
+.range-card{background:#fff;border-radius:20px;padding:32px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;overflow:hidden;animation:slideUp .4s ease}
+.dark .range-card{background:#161b22}
+.range-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#1a237e,#42a5f5,#1a237e)}
+.welcome-banner{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:12px;padding:14px 16px;margin-bottom:22px;border-left:4px solid #2e7d32}
+.dark .welcome-banner{background:linear-gradient(135deg,#1b2e1b,#163016);border-left-color:#4caf50}
+.welcome-banner p{font-size:.88rem;color:#1b5e20;font-weight:600}
+.dark .welcome-banner p{color:#81c784}
+.welcome-banner span{font-weight:800}
+.range-title{font-size:1.15rem;font-weight:800;color:#1a237e;margin-bottom:6px}
+.dark .range-title{color:#42a5f5}
+.range-sub{font-size:.82rem;color:#607d8b;margin-bottom:20px}
+.range-options{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.range-opt{border:2px solid #d0d9e8;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px}
+.range-opt:hover{border-color:#1565c0;background:#f0f4f8}
+.dark .range-opt{border-color:#30363d}.dark .range-opt:hover{background:#1f2a38;border-color:#42a5f5}
+.range-opt.selected{border-color:#1565c0;background:#e3f2fd}
+.dark .range-opt.selected{background:#1a3a5c;border-color:#42a5f5}
+.range-radio{width:20px;height:20px;border-radius:50%;border:2px solid #d0d9e8;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.range-opt.selected .range-radio{border-color:#1565c0;background:#1565c0}
+.range-opt.selected .range-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+.range-opt-info strong{display:block;font-size:.92rem;font-weight:700;color:#1a1a2e}
+.dark .range-opt-info strong{color:#e6edf3}
+.range-opt-info span{font-size:.77rem;color:#607d8b}
+.custom-range-row{display:flex;gap:10px;margin-bottom:16px}
+.custom-range-row input{flex:1;border:2px solid #d0d9e8;border-radius:8px;padding:10px 12px;font-size:.9rem;font-family:inherit;background:#f8fafc;color:#1a1a2e;outline:none;transition:border-color .2s}
+.dark .custom-range-row input{background:#0d1117;color:#e6edf3;border-color:#30363d}
+.custom-range-row input:focus{border-color:#1565c0}
+.custom-range-row label{font-size:.78rem;font-weight:700;color:#1a237e;display:block;margin-bottom:4px}
+.dark .custom-range-row label{color:#90caf9}
+.start-btn{width:100%;background:linear-gradient(135deg,#2e7d32,#388e3c);color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(46,125,50,.3);letter-spacing:.03em}
+.start-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(46,125,50,.45)}
+
+/* ===== SYNC STATUS BAR ===== */
+#sync-bar{
+  position:fixed;bottom:44px;left:0;right:0;z-index:250;
+  display:none;align-items:center;justify-content:space-between;
+  padding:6px 14px;font-size:.78rem;font-weight:600;flex-wrap:wrap;gap:6px;
+}
+#sync-bar.online{background:#e8f5e9;color:#1b5e20;border-top:2px solid #2e7d32}
+#sync-bar.offline{background:#ffebee;color:#b71c1c;border-top:2px solid #c62828}
+#sync-bar.pending{background:#fff3e0;color:#bf360c;border-top:2px solid #e65100}
+.sync-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0}
+.sync-dot.online{background:#2e7d32;box-shadow:0 0 0 3px rgba(46,125,50,.25)}
+.sync-dot.offline{background:#c62828;box-shadow:0 0 0 3px rgba(198,40,40,.25)}
+.sync-dot.pending{background:#e65100;box-shadow:0 0 0 3px rgba(230,81,0,.25);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.sync-bar-left{display:flex;align-items:center;gap:6px}
+.sync-bar-right{display:flex;align-items:center;gap:8px}
+.sync-btn{border:none;border-radius:6px;padding:4px 10px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.sync-btn.do-sync{background:#e65100;color:#fff}
+.sync-btn.done{background:#2e7d32;color:#fff;opacity:.7;cursor:default}
+
+/* ===== HEADER ===== */
+#header{position:sticky;top:0;z-index:200;background:var(--header);color:#fff;
+display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:auto;min-height:56px;
+box-shadow:0 2px 8px rgba(0,0,0,.3);flex-wrap:wrap;gap:4px;padding-top:6px;padding-bottom:6px}
+#header h1{font-size:1rem;font-weight:700;flex:1;margin-right:8px;min-width:120px}
+.hdr-student-info{font-size:.72rem;color:rgba(255,255,255,.8);display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:2px 0}
+.hdr-student-info span{background:rgba(255,255,255,.12);border-radius:4px;padding:2px 7px;white-space:nowrap}
+.hdr-sync-dot{width:9px;height:9px;border-radius:50%;display:inline-block;border:2px solid rgba(255,255,255,.5)}
+.hdr-sync-dot.online{background:#4caf50}
+.hdr-sync-dot.offline{background:#ef5350}
+.hdr-sync-dot.pending{background:#ff9800;animation:pulse 1.5s infinite}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+#timer-box{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:4px 10px;font-size:.9rem;font-weight:700;font-family:monospace;min-width:82px;text-align:center}
+#timer-box.warn{background:rgba(230,81,0,.7)}
+.icon-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:6px;color:#fff;cursor:pointer;padding:5px 9px;font-size:.78rem;white-space:nowrap}
+.icon-btn:hover{background:rgba(255,255,255,.25)}
+#app{display:flex;height:calc(100vh - 56px - 44px - 32px);overflow:hidden}
+#q-area{flex:1;overflow-y:auto;padding:16px 18px;min-width:0}
+#palette-panel{width:270px;min-width:220px;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;flex-shrink:0}
+.q-card{background:var(--surface);border-radius:12px;box-shadow:var(--shadow);padding:20px;margin-bottom:14px}
+.q-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.q-num-badge{background:var(--accent);color:#fff;border-radius:6px;padding:3px 10px;font-size:.82rem;font-weight:700}
+.q-sect{font-size:.75rem;color:var(--subtext);background:var(--border);border-radius:4px;padding:2px 8px}
+.q-text{font-size:1rem;font-weight:500;line-height:1.55;margin-bottom:18px;color:var(--text)}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;align-items:flex-start;gap:10px;border:2px solid var(--border);border-radius:9px;padding:10px 14px;cursor:pointer;transition:all .15s;background:var(--surface)}
+.opt:hover{background:var(--option-hover);border-color:var(--accent)}
+.opt.selected{background:var(--option-sel);border-color:var(--option-border)}
+.opt.correct{background:#c8e6c9;border-color:#2e7d32}
+.opt.wrong{background:#ffcdd2;border-color:#c62828}
+.opt-ltr{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:.88rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.opt.selected .opt-ltr{background:var(--accent2)}
+.opt.correct .opt-ltr{background:#2e7d32}
+.opt.wrong .opt-ltr{background:#c62828}
+.opt-txt{font-size:.97rem;line-height:1.45}
+.ctrl-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{border:none;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600;padding:9px 14px;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2)}
+.btn-s{background:#2e7d32;color:#fff}.btn-s:hover{background:#1b5e20}
+.btn-w{background:#6a1b9a;color:#fff}.btn-w:hover{background:#4a148c}
+.btn-d{background:#c62828;color:#fff}.btn-d:hover{background:#b71c1c}
+.btn-n{background:var(--border);color:var(--text)}.btn-n:hover{filter:brightness(.93)}
+.btn-sub{background:#e65100;color:#fff;padding:8px 16px;font-size:.82rem}
+.btn-sub:hover{background:#bf360c}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.pal-hdr{padding:12px 14px;border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface);z-index:5}
+.pal-legend{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.leg{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--subtext)}
+.leg-dot{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+.pal-grid{display:flex;flex-wrap:wrap;gap:6px;padding:12px;align-content:flex-start}
+.pq{width:38px;height:38px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;font-weight:700;transition:all .15s;color:#fff;user-select:none}
+.pq:hover{transform:scale(1.08)}
+.pq.cur{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--accent)}
+.pq.nv{background:var(--not-visited)}.pq.na{background:var(--unattempted)}.pq.ans{background:var(--answered)}.pq.mrk{background:var(--marked)}.pq.amrk{background:var(--marked-ans)}
+.stats-bar{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.stat{display:flex;flex-direction:column;align-items:center;flex:1;min-width:50px}
+.stat-val{font-size:1.1rem;font-weight:800}
+.stat-lbl{font-size:.68rem;color:var(--subtext);text-align:center}
+.prog-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin:0 12px 10px}
+.prog-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+.srch-box{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.srch-box input{flex:1;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.85rem;background:var(--bg);color:var(--text);outline:none}
+.srch-box input:focus{border-color:var(--accent)}
+.srch-box button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:.85rem;font-weight:600}
+#footer{background:var(--footer-bg);color:#e8eaf6;height:44px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:.82rem;flex-wrap:wrap;padding:0 12px}
+#footer a{color:#90caf9;text-decoration:none;font-weight:600}
+#footer a:hover{text-decoration:underline}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;padding:16px}
+.modal-ov.open{display:flex}
+.modal{background:var(--surface);border-radius:14px;padding:24px;max-width:500px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto}
+.modal h2{font-size:1.2rem;margin-bottom:14px;color:var(--accent)}
+.modal p{font-size:.95rem;line-height:1.55;margin-bottom:10px}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+#result-page{display:none;overflow-y:auto;padding:24px;min-height:calc(100vh - 56px - 44px - 32px)}
+.res-card{background:var(--surface);border-radius:14px;padding:28px;max-width:700px;margin:0 auto 20px;box-shadow:var(--shadow);text-align:center}
+.score-circle{width:140px;height:140px;border-radius:50%;border:8px solid var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px}
+.score-pct{font-size:2rem;font-weight:900;color:var(--accent)}
+.score-lbl{font-size:.8rem;color:var(--subtext)}
+.res-stats{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin:16px 0}
+.rs{display:flex;flex-direction:column;align-items:center}
+.rs-val{font-size:1.5rem;font-weight:800}
+.rs-lbl{font-size:.78rem;color:var(--subtext)}
+
+/* Sync status in results */
+.sync-status-card{
+  max-width:700px;margin:0 auto 16px;border-radius:12px;padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.sync-status-card.online{background:#e8f5e9;border:1px solid #a5d6a7}
+.sync-status-card.offline{background:#ffebee;border:1px solid #ef9a9a}
+.sync-status-card.pending{background:#fff3e0;border:1px solid #ffcc80}
+.sync-status-card.synced{background:#e8f5e9;border:1px solid #66bb6a}
+.sync-status-left{display:flex;align-items:center;gap:10px}
+.sync-status-icon{font-size:1.4rem}
+.sync-status-text strong{display:block;font-size:.9rem;font-weight:700}
+.sync-status-text span{font-size:.78rem;color:var(--subtext)}
+.sync-now-btn{border:none;border-radius:8px;padding:8px 16px;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+.sync-now-btn.active{background:#e65100;color:#fff}
+.sync-now-btn.active:hover{background:#bf360c}
+.sync-now-btn.disabled{background:var(--border);color:var(--subtext);cursor:not-allowed}
+
+/* Student info block */
+.student-info-block{background:linear-gradient(135deg,#e8eaf6,#e3f2fd);border-radius:12px;padding:16px 20px;margin-bottom:20px;border-left:4px solid #1565c0;text-align:left}
+.dark .student-info-block{background:linear-gradient(135deg,#0d1b4b,#1a3a5c);border-left-color:#42a5f5}
+.sib-title{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#607d8b;margin-bottom:10px}
+.sib-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.sib-item{display:flex;flex-direction:column}
+.sib-label{font-size:.7rem;color:#607d8b;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.sib-value{font-size:.9rem;font-weight:700;color:#1a1a2e;margin-top:1px}
+.dark .sib-value{color:#e6edf3}
+
+.rev-sect{background:var(--surface);border-radius:12px;padding:20px;max-width:700px;margin:0 auto 16px;box-shadow:var(--shadow)}
+.rev-q{border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden}
+.rqh{padding:10px 14px;background:var(--bg);display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:8px}
+.rqh-txt{flex:1;font-size:.88rem}
+.rqb{padding:12px 14px;display:none}
+.rqb.open{display:block}
+.r-opt{padding:6px 10px;border-radius:6px;margin:4px 0;font-size:.9rem}
+.r-opt.c{background:#c8e6c9;color:#1b5e20}
+.r-opt.w{background:#ffcdd2;color:#b71c1c}
+.badge{border-radius:4px;padding:1px 7px;font-size:.72rem;font-weight:700;white-space:nowrap}
+.bc{background:#2e7d32;color:#fff}.bw{background:#c62828;color:#fff}.bs{background:var(--not-visited);color:#fff}
+.ftabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.ftab{border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:.8rem;font-weight:600;background:var(--surface);color:var(--text)}
+.ftab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+#pal-tog{display:none;position:fixed;bottom:80px;right:14px;z-index:300;background:var(--accent);color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:1.3rem;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.3)}
+
+/* Retest modal */
+.retest-opt{border:2px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;margin-bottom:10px;transition:all .2s;display:flex;align-items:flex-start;gap:12px}
+.retest-opt:hover{border-color:var(--accent);background:var(--option-hover)}
+.retest-opt-icon{font-size:1.5rem;flex-shrink:0}
+.retest-opt-info strong{display:block;font-weight:700;font-size:.92rem}
+.retest-opt-info span{font-size:.78rem;color:var(--subtext)}
+
+/* Toast notification */
+#toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#323232;color:#fff;border-radius:10px;padding:12px 20px;font-size:.88rem;font-weight:600;
+  z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.success{background:#2e7d32}
+#toast.error{background:#c62828}
+#toast.info{background:#1565c0}
+
+#loading{position:fixed;inset:0;background:#1a237e;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;color:#fff}
+.spin{width:48px;height:48px;border:5px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{font-size:1rem;opacity:.8}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.res-action-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+
+@media(max-width:768px){
+  #header h1{font-size:.82rem}
+  .hdr-student-info{font-size:.65rem}
+  #palette-panel{display:none;position:fixed;inset:0;z-index:400;width:100%;height:100%;border:none}
+  #palette-panel.open{display:flex;flex-direction:column}
+  #pal-tog{display:flex;align-items:center;justify-content:center}
+  .ctrl-bar .btn{padding:7px 9px;font-size:.76rem}
+  .reg-card{padding:24px 18px}
+  .range-card{padding:22px 16px}
+  #app{height:calc(100vh - 56px - 44px - 32px)}
+  .consent-data-list{grid-template-columns:1fr}
+}
+@media(min-width:769px) and (max-width:1024px){
+  #palette-panel{width:220px}
+  .pq{width:34px;height:34px;font-size:.68rem}
+}
+@media print{
+  #header,#footer,#palette-panel,#pal-tog,.ctrl-bar,#submit-btn,#app,#reg-page,#range-page,#consent-page,#sync-bar,#toast{display:none !important}
+  .modal-ov{display:none !important}
+  #result-page{display:block !important;height:auto;overflow:visible;padding:0}
+  .rqb{display:block !important}
+  .res-action-btns{display:none !important}
+  .sync-status-card{display:none !important}
+}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><p>Loading Pathology Question Bank...</p></div>
+
+<!-- ===== CONSENT PAGE ===== -->
+<div id="consent-page" style="display:none;flex-direction:column;align-items:center;justify-content:center">
+  <div class="consent-card">
+    <div class="consent-icon">🔐</div>
+    <div class="consent-title">Data Privacy & Consent</div>
+    <div class="consent-subtitle">Pathology AVN Questions — OSHMEDCHRONICLE</div>
+    <div class="consent-box">
+      <strong>By continuing, you agree that your exam details and results may be stored locally and, when internet access is available, securely transmitted to the administrator for academic record purposes.</strong>
+      <div style="margin-top:10px;font-size:.85rem;color:#555">The following information will be collected and may be shared with your institution's academic administrator:</div>
+      <div class="consent-data-list">
+        <span>Student Name</span>
+        <span>Academic Year</span>
+        <span>Group Number</span>
+        <span>Student ID</span>
+        <span>Exam Date &amp; Time</span>
+        <span>Question Range</span>
+        <span>Total Questions</span>
+        <span>Attempted / Unattempted</span>
+        <span>Marked for Review</span>
+        <span>Score &amp; Percentage</span>
+        <span>Device Type</span>
+        <span>Sync Status</span>
+      </div>
+    </div>
+    <label class="consent-check-row" id="consent-check-row">
+      <input type="checkbox" id="consent-check" onchange="toggleConsent()">
+      <span class="consent-check-label">I have read and understood the above. I consent to the collection and transmission of my exam data for academic record purposes.</span>
+    </label>
+    <div class="consent-btns">
+      <button class="consent-decline" onclick="declineConsent()">Decline</button>
+      <button class="consent-accept" id="consent-accept-btn" onclick="acceptConsent()">Accept &amp; Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REGISTRATION PAGE ===== -->
+<div id="reg-page" style="display:none">
+  <div class="reg-card">
+    <div class="recovery-banner" id="recovery-banner">
+      <p>⚡ Unfinished session detected! Would you like to resume where you left off?</p>
+      <div class="rb-btns">
+        <button class="rb-btn rb-resume" onclick="resumeSession()">Resume Session</button>
+        <button class="rb-btn rb-discard" onclick="discardSession()">Start Fresh</button>
+      </div>
+    </div>
+    <div class="reg-logo">
+      <div class="reg-logo-icon">🔬</div>
+      <h2>Pathology AVN Questions</h2>
+      <p>Candidate Registration — Please fill in your details</p>
+    </div>
+    <div class="reg-divider"></div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-name">Student Name <span class="req-star">*</span></label>
+      <input class="reg-input" type="text" id="reg-name" placeholder="Enter your full name" autocomplete="name">
+      <div class="field-err" id="err-name">⚠ Student name is required.</div>
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-year">Academic Year <span class="req-star">*</span></label>
+      <select class="reg-input reg-select" id="reg-year">
+        <option value="">-- Select Academic Year --</option>
+        <option value="1st Year">1st Year</option>
+        <option value="2nd Year">2nd Year</option>
+        <option value="3rd Year">3rd Year</option>
+        <option value="Final Year">Final Year</option>
+        <option value="Intern">Intern</option>
+        <option value="PG Year 1">PG Year 1</option>
+        <option value="PG Year 2">PG Year 2</option>
+        <option value="PG Year 3">PG Year 3</option>
+      </select>
+      <div class="field-err" id="err-year">⚠ Please select your academic year.</div>
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-group">Group Number <span class="req-star">*</span></label>
+      <input class="reg-input" type="text" id="reg-group" placeholder="e.g. Group 5 / B-12">
+      <div class="field-err" id="err-group">⚠ Group number is required.</div>
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-id">Student ID / Roll Number <span class="opt-badge">(Optional)</span></label>
+      <input class="reg-input" type="text" id="reg-id" placeholder="Enter your roll number">
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-email">Email Address <span class="opt-badge">(Optional)</span></label>
+      <input class="reg-input" type="email" id="reg-email" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <button class="reg-btn" onclick="submitReg()">Continue to Exam →</button>
+    <div class="reg-footer-note">🔒 Your information is stored locally and transmitted only with your consent.</div>
+  </div>
+</div>
+
+<!-- ===== QUESTION RANGE PAGE ===== -->
+<div id="range-page" style="display:none">
+  <div class="range-card">
+    <div class="welcome-banner">
+      <p>👋 Welcome, <span id="welcome-name">Student</span>! You're all set.</p>
+    </div>
+    <div class="range-title">Select Question Range</div>
+    <div class="range-sub">Choose which questions you'd like to attempt in this session.</div>
+    <div class="range-options" id="range-opts">
+      <div class="range-opt selected" onclick="selectRange(this,'1','30')" data-from="1" data-to="30">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Questions 1 – 30</strong><span>Cell Injury, Apoptosis &amp; Necrosis</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'31','60')" data-from="31" data-to="60">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Questions 31 – 60</strong><span>Calcification, Metaplasia &amp; Dystrophy</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'61','100')" data-from="61" data-to="100">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Questions 61 – 100</strong><span>Inflammation &amp; Mediators</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'101','115')" data-from="101" data-to="115">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Questions 101 – 115</strong><span>Chronic Inflammation &amp; Healing</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'1','115')" data-from="1" data-to="115">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>All Questions (1 – 115)</strong><span>Complete question bank — full exam mode</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'custom','custom')" data-from="custom" data-to="custom">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Custom Range</strong><span>Specify your own start and end question numbers</span></div>
+      </div>
+    </div>
+    <div id="custom-range-inputs" style="display:none">
+      <div class="custom-range-row">
+        <div style="flex:1"><label>From Question #</label><input type="number" id="custom-from" placeholder="e.g. 10" min="1"></div>
+        <div style="flex:1"><label>To Question #</label><input type="number" id="custom-to" placeholder="e.g. 50" min="1"></div>
+      </div>
+    </div>
+    <button class="start-btn" onclick="startExam()">🚀 Start Exam</button>
+  </div>
+</div>
+
+<!-- ===== MAIN EXAM ===== -->
+<div id="header" style="display:none">
+  <div style="flex:1;min-width:0">
+    <h1>Pathology AVN Questions</h1>
+    <div class="hdr-student-info" id="hdr-student-info"></div>
+  </div>
+  <div class="hdr-right">
+    <span class="hdr-sync-dot nv" id="hdr-sync-dot" title="Connection status"></span>
+    <div id="timer-box">00:00:00</div>
+    <button class="icon-btn" onclick="toggleDark()" id="dark-btn">Dark</button>
+    <button class="icon-btn" onclick="toggleFS()">⛶</button>
+    <button class="btn btn-sub" onclick="confirmSubmit()" id="submit-btn">Submit</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div id="q-area">
+    <div class="q-card">
+      <div class="q-meta">
+        <span class="q-num-badge" id="q-badge">Q 1</span>
+        <span class="q-sect" id="q-sect">General Pathology</span>
+      </div>
+      <div class="q-text" id="q-text">Loading...</div>
+      <div class="opts" id="opts-container"></div>
+      <div class="ctrl-bar">
+        <button class="btn btn-n" onclick="navigate(-1)" id="prev-btn">◀ Prev</button>
+        <button class="btn btn-p" onclick="navigate(1)">Next ▶</button>
+        <button class="btn btn-s" onclick="saveAndNext()">Save &amp; Next</button>
+        <button class="btn btn-w" onclick="markReview()">Mark Review</button>
+        <button class="btn btn-n" onclick="clearResp()">Clear</button>
+      </div>
+    </div>
+  </div>
+  <div id="palette-panel">
+    <div class="pal-hdr"><span>Question Palette</span><button class="icon-btn" onclick="closePal()">✕</button></div>
+    <div class="stats-bar" id="stats-bar"></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="srch-box">
+      <input type="number" id="q-srch" placeholder="Go to Q#" min="1" onkeydown="if(event.key==='Enter')doJump()">
+      <button onclick="doJump()">Go</button>
+    </div>
+    <div class="pal-legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--not-visited)"></div>Not Visited</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--unattempted)"></div>Not Answered</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--answered)"></div>Answered</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--marked)"></div>Marked</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--marked-ans)"></div>Ans+Marked</div>
+    </div>
+    <div style="padding:8px 12px;border-bottom:1px solid var(--border)">
+      <div class="ftabs">
+        <div class="ftab active" onclick="setPalFlt('all',this)">All</div>
+        <div class="ftab" onclick="setPalFlt('ans',this)">Answered</div>
+        <div class="ftab" onclick="setPalFlt('na',this)">Unanswered</div>
+        <div class="ftab" onclick="setPalFlt('mrk',this)">Marked</div>
+        <div class="ftab" onclick="setPalFlt('nv',this)">Not Visited</div>
+      </div>
+    </div>
+    <div class="pal-grid" id="pal-grid"></div>
+  </div>
+</div>
+
+<!-- Sync bar (above footer during exam) -->
+<div id="sync-bar" style="display:none">
+  <div class="sync-bar-left">
+    <span class="sync-dot" id="sync-dot"></span>
+    <span id="sync-bar-text">Checking connection...</span>
+  </div>
+  <div class="sync-bar-right">
+    <button class="sync-btn" id="sync-bar-btn" onclick="trySyncNow()" style="display:none">Sync Now</button>
+  </div>
+</div>
+
+<!-- Results page -->
+<div id="result-page" style="display:none">
+  <div class="sync-status-card" id="res-sync-card">
+    <div class="sync-status-left">
+      <div class="sync-status-icon" id="res-sync-icon">⏳</div>
+      <div class="sync-status-text">
+        <strong id="res-sync-title">Checking sync status...</strong>
+        <span id="res-sync-sub">Please wait</span>
+      </div>
+    </div>
+    <button class="sync-now-btn" id="res-sync-btn" onclick="trySyncNow()">Sync Now</button>
+  </div>
+
+  <div class="res-card">
+    <h2 style="font-size:1.5rem;margin-bottom:16px">📋 Exam Results</h2>
+    <div class="student-info-block" id="res-student-block">
+      <div class="sib-title">Candidate Information</div>
+      <div class="sib-grid" id="res-student-grid"></div>
+    </div>
+    <div class="score-circle"><span class="score-pct" id="res-pct">0%</span><span class="score-lbl">Score</span></div>
+    <div class="res-stats" id="res-stats"></div>
+    <div class="res-action-btns">
+      <button class="btn btn-p" onclick="showRev('all')">All Questions</button>
+      <button class="btn btn-s" onclick="showRev('correct')">Correct</button>
+      <button class="btn btn-d" onclick="showRev('wrong')">Wrong</button>
+      <button class="btn btn-w" onclick="showRev('skip')">Skipped</button>
+      <button class="btn btn-n" onclick="downloadResult()">⬇ Download</button>
+      <button class="btn btn-n" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-sub" onclick="openRetestModal()">🔄 Retest</button>
+    </div>
+  </div>
+  <div class="rev-sect" id="rev-container"></div>
+</div>
+
+<button id="pal-tog" onclick="togglePal()">☰</button>
+
+<div id="footer" style="display:none">
+  <span>Made by OSHMEDCHRONICLE | Pradeep Waghmare</span>
+  <a href="https://youtu.be/WDVnkr4X8Ug?si=x1iiMUr2c2-WAkmt" target="_blank" rel="noopener">▶ YouTube</a>
+</div>
+
+<!-- Submit confirm modal -->
+<div class="modal-ov" id="confirm-modal">
+  <div class="modal">
+    <h2>Submit Exam?</h2>
+    <p id="confirm-msg"></p>
+    <div class="modal-btns">
+      <button class="btn btn-n" onclick="closeModal('confirm-modal')">Cancel</button>
+      <button class="btn btn-d" onclick="submitExam()">Submit Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Retest modal -->
+<div class="modal-ov" id="retest-modal">
+  <div class="modal">
+    <h2>🔄 Retest Options</h2>
+    <div class="retest-opt" onclick="doRetake()">
+      <div class="retest-opt-icon">🔁</div>
+      <div class="retest-opt-info"><strong>Retake Same Range</strong><span>Keeps your name, year and group. Resets answers and timer.</span></div>
+    </div>
+    <div class="retest-opt" onclick="doFreshExam()">
+      <div class="retest-opt-icon">🆕</div>
+      <div class="retest-opt-info"><strong>Start Fresh Exam</strong><span>Clears all student information. Returns to registration screen.</span></div>
+    </div>
+    <div class="modal-btns"><button class="btn btn-n" onclick="closeModal('retest-modal')">Cancel</button></div>
+  </div>
+</div>
+
+<!-- Pending sync modal -->
+<div class="modal-ov" id="pending-sync-modal">
+  <div class="modal">
+    <h2>🌐 Internet Connected!</h2>
+    <p>You have <strong id="pending-count">1</strong> pending exam result(s) that haven't been synchronized yet. Would you like to sync them now?</p>
+    <div class="modal-btns">
+      <button class="btn btn-n" onclick="closeModal('pending-sync-modal')">Later</button>
+      <button class="btn btn-s" onclick="syncPendingNow()">Sync Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// QUESTION BANK
+// ============================================================
+var QUESTIONS=[
+{num:"1",q:"A pathological reaction is:",opts:[{l:"A",t:"a variety of diseases;"},{l:"B",t:"short-term unusual reaction of the body to any effect;"},{l:"C",t:"unusual result of laboratory analysis;"},{l:"D",t:"the body's protective reaction to adverse external influences."}],ans:"D"},
+{num:"2",q:"Coagulative necrosis is found in which infection?",opts:[{l:"A",t:"TB"},{l:"B",t:"Sarcoidosis"},{l:"C",t:"Gangrene"},{l:"D",t:"Fungal infection"}],ans:"C"},
+{num:"3",q:"Organelle which plays a pivotal role in apoptosis is:",opts:[{l:"A",t:"Cytoplasm"},{l:"B",t:"Golgi complex"},{l:"C",t:"Mitochondria"},{l:"D",t:"Nucleus"}],ans:"C"},
+{num:"4",q:"Which of the following is an anti-apoptotic gene?",opts:[{l:"A",t:"C-myc"},{l:"B",t:"P53"},{l:"C",t:"Bcl-2"},{l:"D",t:"Bax"}],ans:"C"},
+{num:"5",q:"Most pathognomic sign of irreversible cell injury:",opts:[{l:"A",t:"Amorphous densities in mitochondria"},{l:"B",t:"Swelling of the cell membrane"},{l:"C",t:"Ribosomes detached from endoplasmic reticulum"},{l:"D",t:"Clumping of nuclear chromatin"}],ans:"A"},
+{num:"6",q:"Programmed cell death is known as:",opts:[{l:"A",t:"Cytolysis"},{l:"B",t:"Apoptosis"},{l:"C",t:"Necrosis"},{l:"D",t:"Proptosis"}],ans:"B"},
+{num:"7",q:"Morphological changes of apoptosis include:",opts:[{l:"A",t:"Cytoplasmic blebs"},{l:"B",t:"Inflammation"},{l:"C",t:"Nuclear fragmentation"},{l:"D",t:"Spindle formation"}],ans:"C"},
+{num:"8",q:"Inhibitor of apoptosis is:",opts:[{l:"A",t:"p53"},{l:"B",t:"Ras"},{l:"C",t:"Myc"},{l:"D",t:"Bcl-2"}],ans:"D"},
+{num:"9",q:"Irreversible injury in cell is:",opts:[{l:"A",t:"Deposition of Ca in mitochondria"},{l:"B",t:"Swelling"},{l:"C",t:"Mitotic figure"},{l:"D",t:"Ribosomal detachment"}],ans:"A"},
+{num:"10",q:"First cellular change in hypoxia:",opts:[{l:"A",t:"Decreased oxidative phosphorylation in mitochondria"},{l:"B",t:"Cellular swelling"},{l:"C",t:"Alteration in cellular membrane permeability"},{l:"D",t:"Clumping of nuclear chromatin"}],ans:"A"},
+{num:"11",q:"Liquefactive necrosis is seen in:",opts:[{l:"A",t:"Heart"},{l:"B",t:"Brain"},{l:"C",t:"Lung"},{l:"D",t:"Spleen"}],ans:"B"},
+{num:"12",q:"Which of the following induces apoptosis in a cell?",opts:[{l:"A",t:"Oleic acid"},{l:"B",t:"Isoprenoids"},{l:"C",t:"Myristic acid"},{l:"D",t:"Glucocorticoids"}],ans:"D"},
+{num:"13",q:"Which of the following is not seen in apoptosis?",opts:[{l:"A",t:"Chromatin condensation"},{l:"B",t:"DNA fragmentation"},{l:"C",t:"Inflammation"},{l:"D",t:"Cell membrane shrinkage"}],ans:"C"},
+{num:"14",q:"What is the common change in cell death associated with both apoptosis and necrosis?",opts:[{l:"A",t:"Cell shrinkage"},{l:"B",t:"Bleb formation"},{l:"C",t:"Chromatin condensation"},{l:"D",t:"Presence of inflammation"}],ans:"C"},
+{num:"15",q:"Caseous necrosis is seen in which of the following:",opts:[{l:"A",t:"CMV infection"},{l:"B",t:"Staphylococcal infection"},{l:"C",t:"Treponemal infection"},{l:"D",t:"HSV infection"}],ans:"A"},
+{num:"16",q:"Apoptotic bodies are:",opts:[{l:"A",t:"Clumped chromatin bodies"},{l:"B",t:"Pyknotic nucleus without organelles"},{l:"C",t:"Cell membrane bound with organelles"},{l:"D",t:"No nucleus with organells"}],ans:"C"},
+{num:"17",q:"Pathological condition:",opts:[{l:"A",t:"it is a special type of disease;"},{l:"B",t:"is the initial period of the disease;"},{l:"C",t:"may occur as a result of a previously transmitted disease;"},{l:"D",t:"is a short-term unusual reaction to external stimuli."}],ans:"D"},
+{num:"18",q:"Pathogenesis is:",opts:[{l:"A",t:"the section of pathology that studies the mechanisms of disease development;"},{l:"B",t:"the same as the pathological process;"},{l:"C",t:"a certain type of disease;"},{l:"D",t:"the cause of the disease"}],ans:"A"},
+{num:"19",q:"Etiology is:",opts:[{l:"A",t:"the doctrine of the causes and conditions of the occurrence and development of diseases;"},{l:"B",t:"the doctrine of the mechanisms of disease development;"},{l:"C",t:"the outcome of the disease;"},{l:"D",t:"the cause and mechanism of the pathological process."}],ans:"A"},
+{num:"20",q:"Caspases are seen in which of the following?",opts:[{l:"A",t:"Cell division"},{l:"B",t:"Apoptosis"},{l:"C",t:"Necrosis"},{l:"D",t:"Inflammation"}],ans:"B"},
+{num:"21",q:"Both hyperplasia and hypertrophy are seen in?",opts:[{l:"A",t:"Breast enlargement during lactation"},{l:"B",t:"Uterus during pregnancy"},{l:"C",t:"Skeletal muscle enlargement during exercise"},{l:"D",t:"Left ventricular hypertrophy during heart failure"}],ans:"B"},
+{num:"22",q:"Which of the following is not a common site for metastatic calcification?",opts:[{l:"A",t:"Gastric mucosa"},{l:"B",t:"Kidney"},{l:"C",t:"Parathyroid"},{l:"D",t:"Lung"}],ans:"C"},
+{num:"23",q:"Calcification of soft tissues without any disturbance of calcium metabolism is called:",opts:[{l:"A",t:"Inotropic calcification"},{l:"B",t:"Monotropic calcification"},{l:"C",t:"Dystrophic calcification"},{l:"D",t:"Calcium induced calcification"}],ans:"C"},
+{num:"24",q:"Dystrophic calcification is seen in:",opts:[{l:"A",t:"Rickets"},{l:"B",t:"Hyperparathyroidism"},{l:"C",t:"Atheromatous plaque"},{l:"D",t:"Vitamin A intoxication"}],ans:"C"},
+{num:"25",q:"The type of necrosis that develops from exposure to low and high temperatures:",opts:[{l:"A",t:"indirect;"},{l:"B",t:"toxic;"},{l:"C",t:"trophoneurotic;"},{l:"D",t:"direct;"}],ans:"D"},
+{num:"26",q:"Heterotopic calcification occurs in:",opts:[{l:"A",t:"Ankylosing spondylitis"},{l:"B",t:"Reiter's syndrome"},{l:"C",t:"Gouty arthritis"},{l:"D",t:"Rheumatoid arthritis"}],ans:"A"},
+{num:"27",q:"Russell's body, are accumulations of:",opts:[{l:"A",t:"Cholesterol"},{l:"B",t:"Immunoglobulins"},{l:"C",t:"Lipoproteins"},{l:"D",t:"Phospholipids"}],ans:"B"},
+{num:"28",q:"Dystrophic calcification is seen in:",opts:[{l:"A",t:"Atheroma"},{l:"B",t:"Paget's disease"},{l:"C",t:"Renal osteodystrophy"},{l:"D",t:"Milk-alkali syndrome"}],ans:"A"},
+{num:"29",q:"Brown atrophy is due to:",opts:[{l:"A",t:"Fatty necrosis"},{l:"B",t:"Hemosiderin"},{l:"C",t:"Lipofuscin"},{l:"D",t:"Ceruloplasmin"}],ans:"C"},
+{num:"30",q:"Transformation of one epithelium to other epithelium is known as:",opts:[{l:"A",t:"Dysplasia"},{l:"B",t:"Hyperplasia"},{l:"C",t:"Neoplasia"},{l:"D",t:"Metaplasia"}],ans:"D"},
+{num:"31",q:"Metastatic calcification is most often seen in:",opts:[{l:"A",t:"Lymph nodes"},{l:"B",t:"Lungs"},{l:"C",t:"Kidney"},{l:"D",t:"Liver"}],ans:"C"},
+{num:"32",q:"Russell bodies are seen in:",opts:[{l:"A",t:"Lymphocytes"},{l:"B",t:"Neutrophils"},{l:"C",t:"Macrophages"},{l:"D",t:"Plasma cells"}],ans:"D"},
+{num:"33",q:"Name the tissue in which metaplasia is most common:",opts:[{l:"A",t:"nervous;"},{l:"B",t:"renal;"},{l:"C",t:"epithelial;"},{l:"D",t:"cardiac;"}],ans:"C"},
+{num:"34",q:"Define the term dystrophy:",opts:[{l:"A",t:"metabolic disorder leading to damage to cellular structures;"},{l:"B",t:"disruption of oxygen supply to cells and tissues;"},{l:"C",t:"local necrosis of cells and tissues;"},{l:"D",t:"restoration of lost structures;"}],ans:"A"},
+{num:"35",q:"Hyalinosis is characterized by the following sign:",opts:[{l:"A",t:"develops in the cells of parenchymal organs;"},{l:"B",t:"often develops with myocardial infarction;"},{l:"C",t:"it is common in hypertension and diabetes mellitus."},{l:"D",t:"the phenomenon of metachromasia is characteristic;"}],ans:"C"},
+{num:"36",q:"Name the changes that the presence of kidney stones leads to:",opts:[{l:"A",t:"tuberculosis;"},{l:"B",t:"hydronephrosis;"},{l:"C",t:"kidney cancer;"},{l:"D",t:"polycystic kidney disease;"}],ans:"B"},
+{num:"37",q:"Define the concept of atrophy:",opts:[{l:"A",t:"fat reduction;"},{l:"B",t:"restoration of tissue to replace the lost one;"},{l:"C",t:"sclerosis;"},{l:"D",t:"lifetime reduction in the size of organs, tissues, cells;"}],ans:"D"},
+{num:"38",q:"Name the pathological process that often occurs against the background of epithelial metaplasia:",opts:[{l:"A",t:"inflammation;"},{l:"B",t:"necrosis;"},{l:"C",t:"cancer;"},{l:"D",t:"amyloidosis;"}],ans:"C"},
+{num:"39",q:"Thesaurismosis associated with carbohydrate metabolism violation:",opts:[{l:"A",t:"phenylketonuria;"},{l:"B",t:"Wilson-Konovalov disease;"},{l:"C",t:"Gaucher's disease;"},{l:"D",t:"Gierke's disease;"}],ans:"D"},
+{num:"40",q:"The basis for the development of rickets is a metabolic disorder:",opts:[{l:"A",t:"sodium;"},{l:"B",t:"copper;"},{l:"C",t:"phosphorus;"},{l:"D",t:"potassium;"}],ans:"C"},
+{num:"41",q:"Extracellular deposits of misfolded proteins that aggregate to form insoluble fibrils",opts:[{l:"A",t:"viral replication of B cells"},{l:"B",t:"amyloidosis"},{l:"C",t:"intracellular mutation of T cells"},{l:"D",t:"recognition inability of integral proteins."}],ans:"B"},
+{num:"42",q:"Define the concept of hyperplasia:",opts:[{l:"A",t:"decrease in the volume of cells, tissues;"},{l:"B",t:"stroma overgrowth in place of parenchyma;"},{l:"C",t:"restoration of tissue to replace the lost one;"},{l:"D",t:"an increase in the number of structural elements of tissue, cells;"}],ans:"D"},
+{num:"43",q:"Name the organ in which the development of vicar hypertrophy is possible:",opts:[{l:"A",t:"liver;"},{l:"B",t:"pituitary gland;"},{l:"C",t:"the spleen;"},{l:"D",t:"kidney;"}],ans:"D"},
+{num:"44",q:"Define the concept of vicarious hypertrophy:",opts:[{l:"A",t:"hypertrophy of one of the paired organs when the second one is removed;"},{l:"B",t:"hypertrophy of the organ with increased work;"},{l:"C",t:"hypertrophy of an organ when a part of it is replaced by a scar;"},{l:"D",t:"neurohumoral hypertrophy;"}],ans:"A"},
+{num:"45",q:"A morphological sign of a change in the heart in obesity is:",opts:[{l:"A",t:"a tiger heart;"},{l:"B",t:"adipose tissue under the endocardium;"},{l:"C",t:"the hairy heart;"},{l:"D",t:"adipose tissue under the epicardium;"}],ans:"B"},
+{num:"46",q:"The level of calcium in the blood during metastatic calcification:",opts:[{l:"A",t:"not changed;"},{l:"B",t:"downgraded;"},{l:"C",t:"increased;"},{l:"D",t:"hesitates;"}],ans:"C"},
+{num:"47",q:"Name the morphological type of obesity:",opts:[{l:"A",t:"alimentary;"},{l:"B",t:"hypertrophic;"},{l:"C",t:"upper."},{l:"D",t:"symmetrical;"}],ans:"B"},
+{num:"48",q:"The level of calcium in the blood during dystrophic calcification:",opts:[{l:"A",t:"not changed;"},{l:"B",t:"downgraded;"},{l:"C",t:"increased;"},{l:"D",t:"hesitates;"}],ans:"A"},
+{num:"49",q:"Parenchymal lipidoses are associated with metabolic disorders:",opts:[{l:"A",t:"cholesterol;"},{l:"B",t:"neutral fat;"},{l:"C",t:"hemoglobin;"},{l:"D",t:"cytoplasmic fat;"}],ans:"B"},
+{num:"50",q:"Name the cause of rickets:",opts:[{l:"A",t:"hypercalcemia;"},{l:"B",t:"hypophosphatemia;"},{l:"C",t:"vitamin D deficiency;"},{l:"D",t:"excess vitamin D;"}],ans:"C"},
+{num:"51",q:"Name the changes that the presence of kidney stones leads to:",opts:[{l:"A",t:"tuberculosis;"},{l:"B",t:"hydronephrosis;"},{l:"C",t:"kidney cancer;"},{l:"D",t:"polycystic kidney disease;"}],ans:"B"},
+{num:"52",q:"Name the disease based on a violation of copper metabolism:",opts:[{l:"A",t:"Gaucher disease;"},{l:"B",t:"hemochromatosis;"},{l:"C",t:"Wilson-Konovalov disease;"},{l:"D",t:"melanosis;"}],ans:"C"},
+{num:"53",q:"Name the disease in which hypokalemia develops:",opts:[{l:"A",t:"Addison's disease;"},{l:"B",t:"periodic paralysis;"},{l:"C",t:"Wilson-Konovalov disease;"},{l:"D",t:"Gaucher's disease;"}],ans:"B"},
+{num:"54",q:"Name the hormone that regulates calcium metabolism in the body:",opts:[{l:"A",t:"insulin;"},{l:"B",t:"adrenocorticotropic hormone;"},{l:"C",t:"STG;"},{l:"D",t:"calcitonin;"}],ans:"D"},
+{num:"55",q:"Name a disease in which a violation of nucleoprotein metabolism does not develop:",opts:[{l:"A",t:"malaria;"},{l:"B",t:"gout;"},{l:"C",t:"uric acid diathesis;"},{l:"D",t:"urolithiasis;"}],ans:"A"},
+{num:"56",q:"In acute inflammation endothelial retraction leads to:",opts:[{l:"A",t:"Delayed transient increase in permeability"},{l:"B",t:"Immediate transient increase in permeability"},{l:"C",t:"Delayed prolonged increase in permeability"},{l:"D",t:"Immediate transient decrease in permeability"}],ans:"C"},
+{num:"57",q:"Which among the following is the hallmark of acute inflammation?",opts:[{l:"A",t:"Vasoconstriction"},{l:"B",t:"Stasis"},{l:"C",t:"Vasodilation and increase in permeability"},{l:"D",t:"Leukocyte margination"}],ans:"C"},
+{num:"58",q:"Main feature of chemotaxis is:",opts:[{l:"A",t:"Increased random movement of neutrophils"},{l:"B",t:"Increase adhesiveness to intima"},{l:"C",t:"Increased phagocytosis"},{l:"D",t:"Unidirectional locomotion of the neutrophils"}],ans:"D"},
+{num:"59",q:"Characteristic of acute inflammation is:",opts:[{l:"A",t:"Vasodilation and increased vascular permeability"},{l:"B",t:"Vasoconstriction"},{l:"C",t:"Platelet aggregation"},{l:"D",t:"Infiltration by neutrophils"}],ans:"A"},
+{num:"60",q:"Which of the following tumors is associated with tuberous sclerosis?",opts:[{l:"A",t:"Cardiac rhabdomyoma"},{l:"B",t:"Neuroblastoma"},{l:"C",t:"Wilms tumor"},{l:"D",t:"Retinoblastoma"}],ans:"A"},
+{num:"61",q:"Which of the following is not true?",opts:[{l:"A",t:"NADPH oxidase generate superoxide ion"},{l:"B",t:"MPO kills by OC1-"},{l:"C",t:"Chediak-Higashi syndrome is due to defective phagolysosome formation"},{l:"D",t:"In Bruton's disease there is normal opsonization"}],ans:"D"},
+{num:"62",q:"In acute inflammation due to contraction of endothelial cell cytoskeleton:",opts:[{l:"A",t:"Delayed transient increase in permeability"},{l:"B",t:"Early transient increase"},{l:"C",t:"Delayed permanent increase"},{l:"D",t:"Early permanent increase"}],ans:"D"},
+{num:"63",q:"Diapedesis is:",opts:[{l:"A",t:"Immigration of leukocytes through the basemen membrane"},{l:"B",t:"Immigration of the leukocytes through the vessel wall to the site of inflammation"},{l:"C",t:"Aggregation of platelets at the site of bleeding"},{l:"D",t:"Auto digestion of the cells"}],ans:"B"},
+{num:"64",q:"Endothelium leukocyte interaction during inflammation is mediated by:",opts:[{l:"A",t:"Selectins"},{l:"B",t:"Integrins"},{l:"C",t:"Defensins"},{l:"D",t:"Endothelin"}],ans:"A"},
+{num:"65",q:"Most important for diapedesis?",opts:[{l:"A",t:"PECAM"},{l:"B",t:"Selectin"},{l:"C",t:"Integrin"},{l:"D",t:"Mucin like glycoprotein"}],ans:"A"},
+{num:"66",q:"Which of the following is not a mediator of acute inflammation?",opts:[{l:"A",t:"Angiotensin"},{l:"B",t:"Prostaglandin E2"},{l:"C",t:"Kallikrein"},{l:"D",t:"C3a"}],ans:"A"},
+{num:"67",q:"The function common to neutrophils, monocytes, and macrophages is:",opts:[{l:"A",t:"Immune response is reduced"},{l:"B",t:"Phagocytosis"},{l:"C",t:"Liberation of histamine"},{l:"D",t:"Destruction of old erythrocytes"}],ans:"B"},
+{num:"68",q:"The role of bradykinin in process of inflammation is:",opts:[{l:"A",t:"Vasoconstriction"},{l:"B",t:"Bronchodilation"},{l:"C",t:"Pain"},{l:"D",t:"Increased vascular permeability"}],ans:"D"},
+{num:"69",q:"Which of the following is not an inflammatory mediator?",opts:[{l:"A",t:"Tumor Necrosis Factor"},{l:"B",t:"Myeloperoxidase"},{l:"C",t:"Interferons"},{l:"D",t:"Interleukin"}],ans:"B"},
+{num:"70",q:"To which family of chemical mediators do Lipoxins belong?",opts:[{l:"A",t:"Kinin system"},{l:"B",t:"Cytokines"},{l:"C",t:"Chemokines"},{l:"D",t:"Arachidonic acid metabolites"}],ans:"D"},
+{num:"71",q:"Most important mediator of chemotaxis is:",opts:[{l:"A",t:"C3b"},{l:"B",t:"C5a"},{l:"C",t:"C5-7"},{l:"D",t:"C2"}],ans:"B"},
+{num:"72",q:"Histamine causes:",opts:[{l:"A",t:"Hypertension"},{l:"B",t:"Vasoconstriction"},{l:"C",t:"Vasodilation"},{l:"D",t:"Tachycardia"}],ans:"C"},
+{num:"73",q:"In inflammatory process, the prostaglandin E1 and E2 cause:",opts:[{l:"A",t:"Vasodilatation"},{l:"B",t:"Increased gastric output"},{l:"C",t:"Decreased body temperature"},{l:"D",t:"Vasoconstriction"}],ans:"A"},
+{num:"74",q:"Inflammatory mediator of generalized inflammation is:",opts:[{l:"A",t:"IL-1"},{l:"B",t:"IL-2"},{l:"C",t:"Interferon alpha"},{l:"D",t:"TNF"}],ans:"A"},
+{num:"75",q:"To which family of chemical mediators do the lipoxins belong?",opts:[{l:"A",t:"Kinin system"},{l:"B",t:"Cytokines"},{l:"C",t:"Chemokines"},{l:"D",t:"Arachidonic acid metabolites"}],ans:"D"},
+{num:"76",q:"Slow mediators of inflammation are:",opts:[{l:"A",t:"Leukotrienes"},{l:"B",t:"Prostaglandins"},{l:"C",t:"Interleukins"},{l:"D",t:"Vasoactive amines"}],ans:"A"},
+{num:"77",q:"Systemic inflammatory response syndrome, false is:",opts:[{l:"A",t:"Leucopenia"},{l:"B",t:"Fever"},{l:"C",t:"Leukocytosis"},{l:"D",t:"Hypoglycemia"}],ans:"D"},
+{num:"78",q:"Prostaglandins are synthesized from:",opts:[{l:"A",t:"Linoleic acid"},{l:"B",t:"Linolenic acid"},{l:"C",t:"Arachidonic acid"},{l:"D",t:"Butyric acid"}],ans:"C"},
+{num:"79",q:"Fever occurs due to:",opts:[{l:"A",t:"Endorphin"},{l:"B",t:"IL-1"},{l:"C",t:"Enkephalin"},{l:"D",t:"Histamine"}],ans:"B"},
+{num:"80",q:"Which of the following is secondary mediator of the anaphylaxis?",opts:[{l:"A",t:"Histamine"},{l:"B",t:"Proteases"},{l:"C",t:"Eosinophilic chemotactic factor"},{l:"D",t:"Leukotriene B4"}],ans:"D"},
+{num:"81",q:"Which of the following is NOT a classical symptom of acute inflammation?",opts:[{l:"A",t:"Redness"},{l:"B",t:"Swelling"},{l:"C",t:"Loss of consciousness"},{l:"D",t:"Pain"}],ans:"C"},
+{num:"82",q:"The primary cellular mediator causing vasodilation in acute inflammation is:",opts:[{l:"A",t:"Histamine"},{l:"B",t:"Interleukin-1"},{l:"C",t:"Thromboxane A2"},{l:"D",t:"Leukotriene B4"}],ans:"A"},
+{num:"83",q:"The first step in vascular changes during acute inflammation:",opts:[{l:"A",t:"Increased vascular permeability"},{l:"B",t:"Blood stasis"},{l:"C",t:"Transient vasoconstriction"},{l:"D",t:"Leukocyte emigration"}],ans:"C"},
+{num:"84",q:"Which type of morphological inflammation is characterized by the formation of purulent exudate?",opts:[{l:"A",t:"Serous inflammation"},{l:"B",t:"Fibrinous inflammation"},{l:"C",t:"Purulent (suppurative) inflammation"},{l:"D",t:"Hemorrhagic inflammation"}],ans:"C"},
+{num:"85",q:"Which of the following mediators is derived from arachidonic acid and involved in inflammation?",opts:[{l:"A",t:"Prostaglandin E2"},{l:"B",t:"Histamine"},{l:"C",t:"Serotonin"},{l:"D",t:"Bradykinin"}],ans:"A"},
+{num:"86",q:"Which of the following is NOT a possible outcome of acute inflammation?",opts:[{l:"A",t:"Resolution (complete recovery)"},{l:"B",t:"Progression to chronic inflammation"},{l:"C",t:"Scar formation"},{l:"D",t:"Metastasis"}],ans:"D"},
+{num:"87",q:"Which of the following mediators is a chemotactic factor for neutrophils?",opts:[{l:"A",t:"Leukotriene B4"},{l:"B",t:"Prostacyclin (Prostaglandin I2)"},{l:"C",t:"Histamine"},{l:"D",t:"Nitric oxide"}],ans:"A"},
+{num:"88",q:"Which feature is most characteristic of acute rather than chronic inflammation?",opts:[{l:"A",t:"Proliferation of fibroblasts"},{l:"B",t:"Infiltration by lymphocytes"},{l:"C",t:"Predominance of neutrophils at the inflammation site"},{l:"D",t:"Formation of granulomas"}],ans:"C"},
+{num:"89",q:"Which process describes the movement of leukocytes through the vessel wall into the tissue?",opts:[{l:"A",t:"Chemotaxis"},{l:"B",t:"Phagocytosis"},{l:"C",t:"Diapedesis (transmigration)"},{l:"D",t:"Adhesion"}],ans:"C"},
+{num:"90",q:"Which of the following factors contributes to increased vascular permeability during acute inflammation?",opts:[{l:"A",t:"Bradykinin"},{l:"B",t:"Adrenaline"},{l:"C",t:"Angiotensin II"},{l:"D",t:"Aldosterone"}],ans:"A"},
+{num:"91",q:"Which of the following cellular elements is the first to arrive at the site of acute inflammation?",opts:[{l:"A",t:"Monocytes"},{l:"B",t:"Neutrophils"},{l:"C",t:"Lymphocytes"},{l:"D",t:"Plasma cells"}],ans:"B"},
+{num:"92",q:"Which inflammatory mediator is a complement derivative and has chemotactic activity?",opts:[{l:"A",t:"C3a"},{l:"B",t:"C5a"},{l:"C",t:"C4b"},{l:"D",t:"C1q"}],ans:"B"},
+{num:"94",q:"Which of the following processes enhances leukocyte adhesion to the endothelium?",opts:[{l:"A",t:"Release of adrenaline"},{l:"B",t:"Expression of selectins on endothelium"},{l:"C",t:"Decreased vascular permeability"},{l:"D",t:"Reduction of integrin expression"}],ans:"B"},
+{num:"95",q:"Which outcome of acute inflammation results from significant tissue damage and inability to regenerate?",opts:[{l:"A",t:"Complete resolution"},{l:"B",t:"Abscess formation"},{l:"C",t:"Regeneration"},{l:"D",t:"Scar formation (fibrosis)"}],ans:"D"},
+{num:"96",q:"Which of the following mediators causes pain during acute inflammation?",opts:[{l:"A",t:"Prostaglandin E2"},{l:"B",t:"Histamine"},{l:"C",t:"Interleukin-10"},{l:"D",t:"Leukotriene C4"}],ans:"A"},
+{num:"97",q:"Which of the following is a systemic sign of acute inflammation?",opts:[{l:"A",t:"Fever"},{l:"B",t:"Erythema (redness)"},{l:"C",t:"Swelling"},{l:"D",t:"Localized pain at the injury site"}],ans:"A"},
+{num:"98",q:"Which of the following processes is not characteristic of acute inflammation?",opts:[{l:"A",t:"Exudation of plasma"},{l:"B",t:"Neutrophil infiltration"},{l:"C",t:"Angiogenesis"},{l:"D",t:"Increased vascular permeability"}],ans:"C"},
+{num:"99",q:"Which complement component is responsible for opsonization during inflammation?",opts:[{l:"A",t:"C3b"},{l:"B",t:"C5a"},{l:"C",t:"C4a"},{l:"D",t:"C1q"}],ans:"A"},
+{num:"100",q:"Which of the following molecules is an anti-inflammatory cytokine?",opts:[{l:"A",t:"Interleukin-1"},{l:"B",t:"Interleukin-6"},{l:"C",t:"Interleukin-10"},{l:"D",t:"Tumor necrosis factor-alpha (TNF-a)"}],ans:"C"},
+{num:"101",q:"The main cell type involved in chronic inflammation is:",opts:[{l:"A",t:"Neutrophils"},{l:"B",t:"Eosinophils"},{l:"C",t:"Lymphocytes"},{l:"D",t:"Platelets"}],ans:"C"},
+{num:"102",q:"Which of the following features is not characteristic of chronic inflammation?",opts:[{l:"A",t:"Vascular proliferation"},{l:"B",t:"Accumulation of macrophages"},{l:"C",t:"Formation of granulomas"},{l:"D",t:"Predominance of exudation"}],ans:"D"},
+{num:"103",q:"Which of the following is not a systemic effect of inflammation?",opts:[{l:"A",t:"Fever"},{l:"B",t:"Leukocytosis"},{l:"C",t:"Scar formation"},{l:"D",t:"Increased levels of acute-phase proteins"}],ans:"C"},
+{num:"104",q:"Macrophages in chronic inflammation belong to which type of cells?",opts:[{l:"A",t:"Post-mitotic cells"},{l:"B",t:"Labile cells"},{l:"C",t:"Stable cells"},{l:"D",t:"Cells of the mononuclear phagocyte system"}],ans:"D"},
+{num:"105",q:"Which of the following mediators plays a key role in activating macrophages during chronic inflammation?",opts:[{l:"A",t:"Interferon-gamma"},{l:"B",t:"Histamine"},{l:"C",t:"Bradykinin"},{l:"D",t:"Prostacyclin"}],ans:"A"},
+{num:"106",q:"What is the primary cause of granulomatous inflammation?",opts:[{l:"A",t:"Bacterial toxins"},{l:"B",t:"Foreign bodies"},{l:"C",t:"Allergic reactions"},{l:"D",t:"Viral infections"}],ans:"B"},
+{num:"107",q:"Which type of cells are predominant in granulomas in tuberculosis?",opts:[{l:"A",t:"Langhans giant multinucleated cells"},{l:"B",t:"Plasma cells"},{l:"C",t:"Neutrophils"},{l:"D",t:"Eosinophils"}],ans:"A"},
+{num:"108",q:"Which of the following statements is true regarding the systemic effects of inflammation?",opts:[{l:"A",t:"Decreased levels of C-reactive protein"},{l:"B",t:"Increased red blood cell count"},{l:"C",t:"Increased levels of acute-phase proteins"},{l:"D",t:"Decreased heart rate"}],ans:"C"},
+{num:"109",q:"Which cytokine is responsible for fever during inflammation?",opts:[{l:"A",t:"Interleukin-1"},{l:"B",t:"Interleukin-4"},{l:"C",t:"Interleukin-10"},{l:"D",t:"Interleukin-2"}],ans:"A"},
+{num:"110",q:"Which of the following is not a stage in wound healing by secondary intention?",opts:[{l:"A",t:"Formation of granulation tissue"},{l:"B",t:"Formation of a large scar"},{l:"C",t:"Minimal tissue loss"},{l:"D",t:"Wound contraction"}],ans:"C"},
+{num:"111",q:"Which factor can delay the wound healing process?",opts:[{l:"A",t:"Infection"},{l:"B",t:"Good blood supply"},{l:"C",t:"Proper nutrition"},{l:"D",t:"Minimal tissue damage"}],ans:"A"},
+{num:"112",q:"Which type of cells are capable of constant regeneration under normal conditions?",opts:[{l:"A",t:"Neurons"},{l:"B",t:"Hepatocytes"},{l:"C",t:"Epithelial skin cells"},{l:"D",t:"Cardiomyocytes"}],ans:"C"},
+{num:"113",q:"Which growth factor plays a crucial role in angiogenesis during tissue repair?",opts:[{l:"A",t:"Vascular Endothelial Growth Factor (VEGF)"},{l:"B",t:"Epidermal Growth Factor (EGF)"},{l:"C",t:"Platelet-Derived Growth Factor (PDGF)"},{l:"D",t:"Fibroblast Growth Factor (FGF)"}],ans:"A"},
+{num:"114",q:"What is most characteristic of the process of organization in chronic inflammation?",opts:[{l:"A",t:"Accumulation of exudate"},{l:"B",t:"Formation of granulation tissue"},{l:"C",t:"Tissue necrosis"},{l:"D",t:"Neutrophil infiltration"}],ans:"B"},
+{num:"115",q:"Which factor contributes to the progression from acute to chronic inflammation?",opts:[{l:"A",t:"Rapid elimination of the injurious agent"},{l:"B",t:"Presence of resistant microbes"},{l:"C",t:"Effective immune response"},{l:"D",t:"Short duration of exposure to the stimulus"}],ans:"B"}
+];
+
+// ============================================================
+// STATE
+// ============================================================
+var student={};
+var consentGiven=false;
+var examQuestions=[];
+var selectedRange={from:1,to:30,label:'Q1–Q30'};
+var examStartTime=null,examEndTime=null;
+var cur=0,visited={},answers={},marked={},submitted=false,seconds=0,timerInt=null,palFilter='all';
+var isOnline=navigator.onLine;
+var syncStatus='pending'; // 'synced','pending','offline'
+var lastResult=null;
+var connCheckInt=null;
+var pendingSyncPrompted=false;
+
+// ============================================================
+// UTILS
+// ============================================================
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null}}
+function lsJ(k,v){try{if(v===undefined){var r=localStorage.getItem(k);return r?JSON.parse(r):null;}localStorage.setItem(k,JSON.stringify(v));}catch(e){return null}}
+function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
+
+function showToast(msg,type,dur){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.className='show '+(type||'');
+  clearTimeout(t._to);t._to=setTimeout(function(){t.className=''},dur||3000);
+}
+
+function getDeviceType(){
+  var w=window.innerWidth;
+  if(w<=600) return 'Mobile';
+  if(w<=1024) return 'Tablet';
+  return 'Desktop';
+}
+
+function pad(n){return n<10?'0'+n:n}
+function formatTime(secs){var h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60),s=secs%60;return (h?pad(h)+':':'')+pad(m)+':'+pad(s)}
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload=function(){
+  setTimeout(function(){
+    document.getElementById('loading').style.display='none';
+    var dark=ls('pathology_dark')==='1';
+    if(dark){document.body.classList.add('dark');document.getElementById('dark-btn').textContent='Light';}
+    consentGiven=ls('pathology_consent')==='1';
+    if(!consentGiven){
+      document.getElementById('consent-page').style.display='flex';
+      return;
+    }
+    afterConsent();
+  },800);
+};
+
+// ============================================================
+// CONSENT
+// ============================================================
+function toggleConsent(){
+  var chk=document.getElementById('consent-check');
+  var row=document.getElementById('consent-check-row');
+  var btn=document.getElementById('consent-accept-btn');
+  row.classList.toggle('checked',chk.checked);
+  btn.classList.toggle('enabled',chk.checked);
+}
+function acceptConsent(){
+  if(!document.getElementById('consent-check').checked) return;
+  ls('pathology_consent','1');
+  consentGiven=true;
+  document.getElementById('consent-page').style.display='none';
+  afterConsent();
+}
+function declineConsent(){
+  document.getElementById('consent-page').innerHTML=
+    '<div style="color:#fff;text-align:center;padding:40px;max-width:400px">'
+    +'<div style="font-size:3rem;margin-bottom:16px">🚫</div>'
+    +'<h2 style="margin-bottom:12px">Access Denied</h2>'
+    +'<p style="opacity:.8;margin-bottom:20px">You must accept the data consent to use this exam system. Your data will not be collected or transmitted.</p>'
+    +'<button onclick="location.reload()" style="background:#fff;color:#1a237e;border:none;border-radius:8px;padding:12px 24px;font-weight:700;cursor:pointer;font-size:.95rem">← Go Back</button>'
+    +'</div>';
+}
+function afterConsent(){
+  // Check for session recovery
+  var sess=lsJ('pathology_session');
+  var savedStudent=lsJ('pathology_student');
+  if(savedStudent&&savedStudent.name){
+    student=savedStudent;
+    if(sess&&sess.answers&&Object.keys(sess.answers).length>0){
+      document.getElementById('recovery-banner').style.display='block';
+    }
+    document.getElementById('reg-name').value=student.name||'';
+    document.getElementById('reg-year').value=student.year||'';
+    document.getElementById('reg-group').value=student.group||'';
+    document.getElementById('reg-id').value=student.id||'';
+    document.getElementById('reg-email').value=student.email||'';
+    document.getElementById('reg-page').style.display='flex';
+  } else {
+    document.getElementById('reg-page').style.display='flex';
+  }
+  initConnectivityMonitor();
+}
+
+// ============================================================
+// SESSION RECOVERY
+// ============================================================
+function resumeSession(){
+  var sess=lsJ('pathology_session');
+  if(!sess) return;
+  student=lsJ('pathology_student')||{};
+  examQuestions=sess.examQuestions||[];
+  selectedRange=sess.selectedRange||{from:1,to:30,label:'Q1–Q30'};
+  cur=sess.cur||0;
+  visited=sess.visited||{};
+  answers=sess.answers||{};
+  marked=sess.marked||{};
+  seconds=sess.seconds||0;
+  submitted=false;
+  document.getElementById('reg-page').style.display='none';
+  showExamUI();
+  showToast('Session restored! Continue where you left off.','success',3000);
+}
+function discardSession(){
+  lsDel('pathology_session');
+  document.getElementById('recovery-banner').style.display='none';
+  submitted=false;cur=0;visited={};answers={};marked={};seconds=0;
+}
+function saveSession(){
+  if(submitted) return;
+  lsJ('pathology_session',{examQuestions:examQuestions,selectedRange:selectedRange,cur:cur,visited:visited,answers:answers,marked:marked,seconds:seconds});
+}
+window.addEventListener('beforeunload',function(){if(!submitted) saveSession();});
+
+// ============================================================
+// REGISTRATION
+// ============================================================
+function submitReg(){
+  var name=document.getElementById('reg-name').value.trim();
+  var year=document.getElementById('reg-year').value;
+  var group=document.getElementById('reg-group').value.trim();
+  var id=document.getElementById('reg-id').value.trim();
+  var email=document.getElementById('reg-email').value.trim();
+  var ok=true;
+  function setE(eid,inp,show){document.getElementById(eid).classList.toggle('show',show);document.getElementById(inp).classList.toggle('error',show);}
+  if(!name){setE('err-name','reg-name',true);ok=false;}else{setE('err-name','reg-name',false);}
+  if(!year){setE('err-year','reg-year',true);ok=false;}else{setE('err-year','reg-year',false);}
+  if(!group){setE('err-group','reg-group',true);ok=false;}else{setE('err-group','reg-group',false);}
+  if(!ok) return;
+  student={name:name,year:year,group:group,id:id,email:email};
+  lsJ('pathology_student',student);
+  lsDel('pathology_session');
+  document.getElementById('reg-page').style.display='none';
+  showRangePage();
+}
+
+// ============================================================
+// RANGE PAGE
+// ============================================================
+function showRangePage(){
+  document.getElementById('range-page').style.display='flex';
+  document.getElementById('welcome-name').textContent=student.name;
+  var opts=document.querySelectorAll('.range-opt');
+  opts.forEach(function(o){o.classList.remove('selected');});
+  if(opts[0]) opts[0].classList.add('selected');
+  selectedRange={from:1,to:30,label:'Q1–Q30'};
+}
+function selectRange(el,from,to){
+  document.querySelectorAll('.range-opt').forEach(function(o){o.classList.remove('selected');});
+  el.classList.add('selected');
+  selectedRange={from:from,to:to,label:from==='custom'?'Custom':('Q'+from+'–Q'+to)};
+  document.getElementById('custom-range-inputs').style.display=(from==='custom')?'block':'none';
+}
+function startExam(){
+  var from=selectedRange.from,to=selectedRange.to;
+  if(from==='custom'){
+    from=parseInt(document.getElementById('custom-from').value)||1;
+    to=parseInt(document.getElementById('custom-to').value)||QUESTIONS.length;
+    if(from>to||from<1){alert('Please enter a valid question range.');return;}
+    selectedRange={from:from,to:to,label:'Q'+from+'–Q'+to};
+  } else {from=parseInt(from);to=parseInt(to);}
+  examQuestions=QUESTIONS.filter(function(q){return parseInt(q.num)>=from&&parseInt(q.num)<=to;});
+  if(examQuestions.length===0){alert('No questions found in this range.');return;}
+  cur=0;visited={};answers={};marked={};submitted=false;seconds=0;
+  document.getElementById('range-page').style.display='none';
+  showExamUI();
+}
+
+// ============================================================
+// EXAM UI
+// ============================================================
+function showExamUI(){
+  document.getElementById('header').style.display='';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('footer').style.display='flex';
+  document.getElementById('sync-bar').style.display='flex';
+  document.getElementById('result-page').style.display='none';
+  updateHdrStudentInfo();
+  renderQ();buildPalette();updateStats();
+  examStartTime=new Date();
+  clearInterval(timerInt);
+  timerInt=setInterval(function(){
+    seconds++;
+    document.getElementById('timer-box').textContent=formatTime(seconds);
+    document.getElementById('timer-box').classList.toggle('warn',seconds>5400);
+    if(seconds%30===0) saveSession();
+  },1000);
+  updateSyncUI();
+}
+function updateHdrStudentInfo(){
+  var el=document.getElementById('hdr-student-info');
+  var parts=[student.name,student.year,'Grp: '+student.group];
+  if(student.id) parts.push('ID: '+student.id);
+  el.innerHTML=parts.map(function(p){return '<span>'+escH(p)+'</span>';}).join('');
+}
+
+// ============================================================
+// QUESTION RENDERING
+// ============================================================
+function getSect(n){
+  if(n<=20) return 'Cell Injury & Apoptosis';
+  if(n<=55) return 'Calcification & Dystrophy';
+  if(n<=100) return 'Acute Inflammation';
+  return 'Chronic Inflammation & Healing';
+}
+function renderQ(){
+  var q=examQuestions[cur];visited[cur]=true;
+  document.getElementById('q-badge').textContent='Q '+q.num+' ('+(cur+1)+'/'+examQuestions.length+')';
+  document.getElementById('q-sect').textContent=getSect(parseInt(q.num));
+  document.getElementById('q-text').textContent=q.q;
+  var c=document.getElementById('opts-container');c.innerHTML='';
+  q.opts.forEach(function(o){
+    var d=document.createElement('div');d.className='opt';
+    if(answers[cur]===o.l) d.classList.add('selected');
+    d.innerHTML='<div class="opt-ltr">'+o.l+'</div><div class="opt-txt">'+escH(o.t)+'</div>';
+    d.onclick=function(){selectOpt(o.l,d);};
+    c.appendChild(d);
+  });
+  document.getElementById('prev-btn').disabled=(cur===0);
+  buildPalette();updateStats();
+}
+function selectOpt(l,el){
+  if(submitted) return;
+  document.querySelectorAll('.opt').forEach(function(o){o.classList.remove('selected');});
+  el.classList.add('selected');answers[cur]=l;buildPalette();updateStats();
+}
+function navigate(d){var n=cur+d;if(n<0||n>=examQuestions.length) return;cur=n;renderQ();}
+function saveAndNext(){if(cur<examQuestions.length-1){cur++;renderQ();}}
+function markReview(){marked[cur]=!marked[cur];buildPalette();updateStats();}
+function clearResp(){delete answers[cur];document.querySelectorAll('.opt').forEach(function(o){o.classList.remove('selected');});buildPalette();updateStats();}
+function doJump(){
+  var v=parseInt(document.getElementById('q-srch').value);
+  var idx=examQuestions.findIndex(function(q){return parseInt(q.num)===v;});
+  if(idx>=0){cur=idx;renderQ();closePal();}
+}
+function getStatus(i){
+  var a=!!answers[i],m=!!marked[i],v=!!visited[i];
+  if(a&&m) return 'amrk';if(m) return 'mrk';if(a) return 'ans';if(v) return 'na';return 'nv';
+}
+function buildPalette(){
+  var g=document.getElementById('pal-grid');g.innerHTML='';
+  examQuestions.forEach(function(q,i){
+    var st=getStatus(i);
+    if(palFilter!=='all'&&st!==palFilter) return;
+    var d=document.createElement('div');d.className='pq '+st+(i===cur?' cur':'');
+    d.textContent=q.num;
+    d.onclick=function(){cur=i;renderQ();if(window.innerWidth<=768) closePal();};
+    g.appendChild(d);
+  });
+}
+function updateStats(){
+  var ans=Object.keys(answers).length;
+  var mrk=Object.keys(marked).filter(function(k){return marked[k];}).length;
+  var vis=Object.keys(visited).length;
+  var sb=document.getElementById('stats-bar');
+  sb.innerHTML=[{v:examQuestions.length,l:'Total'},{v:ans,l:'Answered',c:'color:#2e7d32'},{v:examQuestions.length-ans,l:'Not Ans',c:'color:#c62828'},{v:mrk,l:'Marked',c:'color:#6a1b9a'},{v:vis,l:'Visited',c:'color:#1565c0'}]
+  .map(function(s){return '<div class="stat"><span class="stat-val"'+(s.c?' style="'+s.c+'"':'')+'>'+s.v+'</span><span class="stat-lbl">'+s.l+'</span></div>';}).join('');
+  document.getElementById('prog-fill').style.width=(ans/examQuestions.length*100)+'%';
+}
+function setPalFlt(f,el){palFilter=f;document.querySelectorAll('.ftab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');buildPalette();}
+function closePal(){document.getElementById('palette-panel').classList.remove('open');}
+function togglePal(){document.getElementById('palette-panel').classList.toggle('open');}
+function toggleFS(){if(!document.fullscreenElement) document.documentElement.requestFullscreen();else document.exitFullscreen();}
+function toggleDark(){
+  document.body.classList.toggle('dark');
+  var d=document.body.classList.contains('dark');
+  document.getElementById('dark-btn').textContent=d?'Light':'Dark';
+  ls('pathology_dark',d?'1':'0');
+}
+
+// ============================================================
+// SUBMIT
+// ============================================================
+function confirmSubmit(){
+  var ans=Object.keys(answers).length;var not=examQuestions.length-ans;
+  document.getElementById('confirm-msg').textContent='You have answered '+ans+' of '+examQuestions.length+' questions.'+(not>0?' '+not+' unattempted. ':' ')+'Submit now?';
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function submitExam(){
+  closeModal('confirm-modal');
+  clearInterval(timerInt);
+  examEndTime=new Date();submitted=true;lsDel('pathology_session');
+
+  var correct=0,wrong=0,skip=0,mrkCount=Object.keys(marked).filter(function(k){return marked[k];}).length;
+  examQuestions.forEach(function(q,i){
+    if(!answers[i]) skip++;else if(answers[i]===q.ans) correct++;else wrong++;
+  });
+  var total=examQuestions.length,pct=Math.round(correct/total*100);
+  var now=examEndTime;
+  var dateStr=now.toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+  var timeStr=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+  var durationStr=formatTime(seconds);
+  var device=getDeviceType();
+
+  lastResult={
+    name:student.name,year:student.year,group:student.group,id:student.id||'N/A',email:student.email||'N/A',
+    date:dateStr,time:timeStr,duration:durationStr,
+    range:selectedRange.label,total:total,attempted:total-skip,unattempted:skip,markedForReview:mrkCount,
+    correct:correct,wrong:wrong,score:correct+'/'+total,percentage:pct+'%',device:device,
+    exam:'Pathology AVN Questions',synced:false,timestamp:now.getTime()
+  };
+
+  // Save to pending list
+  var pending=lsJ('pathology_pending')||[];
+  pending.push(lastResult);
+  lsJ('pathology_pending',pending);
+  lsJ('pathology_last_result',lastResult);
+  syncStatus='pending';
+
+  // Show results
+  document.getElementById('app').style.display='none';
+  document.getElementById('header').style.display='flex';
+  document.getElementById('result-page').style.display='block';
+  document.getElementById('sync-bar').style.display='none';
+
+  // Student info block
+  var grid=document.getElementById('res-student-grid');
+  var items=[
+    {l:'Student Name',v:student.name},{l:'Academic Year',v:student.year},{l:'Group Number',v:student.group},
+    {l:'Student ID',v:student.id||'N/A'},{l:'Date',v:dateStr},{l:'Time',v:timeStr},
+    {l:'Duration',v:durationStr},{l:'Question Range',v:selectedRange.label},{l:'Device',v:device}
+  ];
+  grid.innerHTML=items.map(function(it){return '<div class="sib-item"><span class="sib-label">'+it.l+'</span><span class="sib-value">'+escH(it.v)+'</span></div>';}).join('');
+
+  document.getElementById('res-pct').textContent=pct+'%';
+  document.getElementById('res-stats').innerHTML=[
+    {v:total,l:'Total',c:''},{v:correct,l:'Correct',c:'color:#2e7d32'},{v:wrong,l:'Wrong',c:'color:#c62828'},
+    {v:skip,l:'Skipped',c:'color:#607d8b'},{v:mrkCount,l:'Marked',c:'color:#6a1b9a'}
+  ].map(function(s){return '<div class="rs"><span class="rs-val"'+(s.c?' style="'+s.c+'"':'')+'>'+s.v+'</span><span class="rs-lbl">'+s.l+'</span></div>';}).join('');
+
+  showRev('all');
+  updateResultSyncCard();
+  trySyncNow();
+}
+
+// ============================================================
+// REVIEW
+// ============================================================
+function showRev(filter){
+  var c=document.getElementById('rev-container');c.innerHTML='';
+  var head=document.createElement('div');head.className='ftabs';
+  [['all','All'],['correct','Correct'],['wrong','Wrong'],['skip','Skipped']].forEach(function(pr){
+    var t=document.createElement('div');t.className='ftab'+(pr[0]===filter?' active':'');
+    t.textContent=pr[1];t.onclick=function(){showRev(pr[0]);};head.appendChild(t);
+  });
+  c.appendChild(head);
+  examQuestions.forEach(function(q,i){
+    var userAns=answers[i],correct=q.ans,isCorrect=userAns===correct,isSkip=!userAns;
+    if(filter==='correct'&&!isCorrect) return;
+    if(filter==='wrong'&&(isCorrect||isSkip)) return;
+    if(filter==='skip'&&!isSkip) return;
+    var d=document.createElement('div');d.className='rev-q';
+    var badge=isSkip?'<span class="badge bs">Skipped</span>':isCorrect?'<span class="badge bc">Correct</span>':'<span class="badge bw">Wrong</span>';
+    d.innerHTML='<div class="rqh" onclick="this.nextElementSibling.classList.toggle(\'open\')"><span class="rqh-txt"><b>Q'+q.num+'.</b> '+escH(q.q.substring(0,80))+(q.q.length>80?'…':'')+'</span>'+badge+'</div>'+
+      '<div class="rqb"><p style="margin-bottom:8px;font-size:.88rem;color:var(--subtext)">'+escH(q.q)+'</p>'+
+      q.opts.map(function(o){var cls='r-opt'+(o.l===correct?' c':(o.l===userAns&&!isCorrect?' w':''));return '<div class="'+cls+'">'+o.l+'. '+escH(o.t)+(o.l===correct?' ✓':'')+(o.l===userAns&&!isCorrect?' ✗':'')+'</div>';}).join('')+'</div>';
+    c.appendChild(d);
+  });
+}
+
+// ============================================================
+// CONNECTIVITY & SYNC
+// ============================================================
+function initConnectivityMonitor(){
+  isOnline=navigator.onLine;
+  window.addEventListener('online',function(){
+    isOnline=true;updateSyncUI();
+    var pending=lsJ('pathology_pending')||[];
+    if(pending.length>0&&!pendingSyncPrompted){
+      pendingSyncPrompted=true;
+      document.getElementById('pending-count').textContent=pending.length;
+      document.getElementById('pending-sync-modal').classList.add('open');
+    }
+  });
+  window.addEventListener('offline',function(){isOnline=false;updateSyncUI();});
+  // Periodic check every 30s
+  clearInterval(connCheckInt);
+  connCheckInt=setInterval(function(){
+    var nowOnline=navigator.onLine;
+    if(nowOnline!==isOnline){isOnline=nowOnline;updateSyncUI();}
+  },30000);
+}
+
+function updateSyncUI(){
+  var dot=document.getElementById('sync-dot');
+  var hdrDot=document.getElementById('hdr-sync-dot');
+  var txt=document.getElementById('sync-bar-text');
+  var btn=document.getElementById('sync-bar-btn');
+  var sb=document.getElementById('sync-bar');
+  var pending=lsJ('pathology_pending')||[];
+
+  if(!isOnline){
+    syncStatus='offline';
+    if(dot){dot.className='sync-dot offline';}
+    if(hdrDot){hdrDot.className='hdr-sync-dot offline';}
+    if(txt) txt.textContent='Offline — data saved locally, will sync when connected';
+    if(btn) btn.style.display='none';
+    if(sb){sb.className='';sb.classList.add('offline');}
+  } else if(pending.length>0){
+    syncStatus='pending';
+    if(dot){dot.className='sync-dot pending';}
+    if(hdrDot){hdrDot.className='hdr-sync-dot pending';}
+    if(txt) txt.textContent=pending.length+' result(s) pending synchronization';
+    if(btn){btn.style.display='';btn.className='sync-btn do-sync';btn.textContent='Sync Now';}
+    if(sb){sb.className='';sb.classList.add('pending');}
+  } else {
+    syncStatus='synced';
+    if(dot){dot.className='sync-dot online';}
+    if(hdrDot){hdrDot.className='hdr-sync-dot online';}
+    if(txt) txt.textContent='Online — all data synchronized';
+    if(btn){btn.style.display='';btn.className='sync-btn done';btn.textContent='✓ Synced';}
+    if(sb){sb.className='';sb.classList.add('online');}
+  }
+  if(submitted) updateResultSyncCard();
+}
+
+function updateResultSyncCard(){
+  var card=document.getElementById('res-sync-card');
+  var icon=document.getElementById('res-sync-icon');
+  var title=document.getElementById('res-sync-title');
+  var sub=document.getElementById('res-sync-sub');
+  var btn=document.getElementById('res-sync-btn');
+  if(!card) return;
+  var pending=lsJ('pathology_pending')||[];
+  if(!isOnline){
+    card.className='sync-status-card offline';
+    icon.textContent='📴';title.textContent='Offline — Data Saved Locally';
+    sub.textContent='Your result is stored on this device. It will sync automatically when internet is available.';
+    btn.className='sync-now-btn disabled';btn.textContent='No Connection';
+  } else if(pending.length>0){
+    card.className='sync-status-card pending';
+    icon.textContent='⏳';title.textContent='Pending Synchronization';
+    sub.textContent='Internet connected. Click Sync Now to transmit your result to the administrator.';
+    btn.className='sync-now-btn active';btn.textContent='Sync Now';
+  } else {
+    card.className='sync-status-card synced';
+    icon.textContent='✅';title.textContent='Exam Data Synchronized Successfully';
+    sub.textContent='Your result has been transmitted to the administrator for academic records.';
+    btn.className='sync-now-btn disabled';btn.textContent='✓ Done';
+  }
+}
+
+function trySyncNow(){
+  if(!isOnline){showToast('No internet connection. Data saved locally.','error');return;}
+  var pending=lsJ('pathology_pending')||[];
+  if(pending.length===0){showToast('All data already synchronized.','success');return;}
+
+  var SCRIPT_URL='https://script.google.com/macros/s/AKfycbxAelDk7zxHZ9g_89MmysQ_G8ibBxA5k8WtW8JanYfy7LZ5-1nU0gfdzX818r0LxTdU/exec';
+
+  showToast('Synchronizing...','info',2000);
+
+  // Send each pending record one by one
+  var sent=0;
+  function sendNext(idx){
+    if(idx>=pending.length){
+      // All sent successfully
+      lsJ('pathology_pending',[]);
+      syncStatus='synced';
+      updateSyncUI();
+      updateResultSyncCard();
+      showToast('Exam data synchronized successfully! ✓','success',4000);
+      pendingSyncPrompted=false;
+      return;
+    }
+    fetch(SCRIPT_URL,{
+      method:'POST',
+      mode:'no-cors', // required for Google Apps Script
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify(pending[idx])
+    })
+    .then(function(){
+      sent++;
+      sendNext(idx+1);
+    })
+    .catch(function(err){
+      showToast('Sync failed. Will retry when connection improves.','error',4000);
+      console.error('Sync error:',err);
+    });
+  }
+  sendNext(0);
+}
+
+function syncPendingNow(){
+  closeModal('pending-sync-modal');
+  trySyncNow();
+}
+
+// ============================================================
+// DOWNLOAD RESULT
+// ============================================================
+function downloadResult(){
+  if(!lastResult) return;
+  var r=lastResult;
+  var lines=[
+    '========================================',
+    '     PATHOLOGY AVN QUESTIONS',
+    '     OSHMEDCHRONICLE — EXAM REPORT',
+    '========================================',
+    '',
+    'CANDIDATE INFORMATION',
+    '----------------------------------------',
+    'Name            : '+r.name,
+    'Academic Year   : '+r.year,
+    'Group Number    : '+r.group,
+    'Student ID      : '+r.id,
+    'Email           : '+r.email,
+    '',
+    'EXAM DETAILS',
+    '----------------------------------------',
+    'Exam Name       : '+r.exam,
+    'Date            : '+r.date,
+    'Time            : '+r.time,
+    'Duration        : '+r.duration,
+    'Selected Range  : '+r.range,
+    'Device Type     : '+r.device,
+    '',
+    'PERFORMANCE SUMMARY',
+    '----------------------------------------',
+    'Total Questions : '+r.total,
+    'Attempted       : '+r.attempted,
+    'Not Attempted   : '+r.unattempted,
+    'Marked for Rev  : '+r.markedForReview,
+    'Correct         : '+r.correct,
+    'Wrong           : '+r.wrong,
+    'Score           : '+r.score,
+    'Percentage      : '+r.percentage,
+    '',
+    '========================================',
+    'QUESTION-WISE REVIEW',
+    '========================================',
+    ''
+  ];
+  examQuestions.forEach(function(q,i){
+    var ua=answers[i],ca=q.ans,res=!ua?'SKIPPED':ua===ca?'CORRECT':'WRONG';
+    lines.push('Q'+q.num+'. ['+res+'] '+q.q);
+    q.opts.forEach(function(o){
+      var marker=o.l===ca?' ← CORRECT':o.l===ua&&ua!==ca?' ← YOUR ANSWER':'';
+      lines.push('   '+o.l+'. '+o.t+marker);
+    });
+    lines.push('');
+  });
+  lines.push('========================================');
+  lines.push('Generated by OSHMEDCHRONICLE');
+  lines.push('Pradeep Waghmare | YouTube: oshmedchronicle');
+  lines.push('========================================');
+
+  var text=lines.join('\n');
+  var blob=new Blob([text],{type:'text/plain'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='PathologyExam_'+r.name.replace(/\s+/g,'_')+'_'+r.date.replace(/\s+/g,'_')+'.txt';
+  a.click();
+  showToast('Result downloaded successfully!','success');
+}
+
+// ============================================================
+// RETEST
+// ============================================================
+function openRetestModal(){document.getElementById('retest-modal').classList.add('open');}
+function doRetake(){
+  closeModal('retest-modal');
+  document.getElementById('result-page').style.display='none';
+  showRangePage();
+}
+function doFreshExam(){
+  closeModal('retest-modal');
+  student={};
+  lsDel('pathology_student');lsDel('pathology_session');lsDel('pathology_consent');
+  document.getElementById('result-page').style.display='none';
+  document.getElementById('footer').style.display='none';
+  document.getElementById('header').style.display='none';
+  document.getElementById('sync-bar').style.display='none';
+  ['reg-name','reg-id','reg-email'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('reg-year').value='';document.getElementById('reg-group').value='';
+  document.getElementById('recovery-banner').style.display='none';
+  document.getElementById('consent-page').style.display='flex';
+  document.getElementById('consent-check').checked=false;
+  document.getElementById('consent-check-row').classList.remove('checked');
+  document.getElementById('consent-accept-btn').classList.remove('enabled');
+}
+</script>
+</body>
+</html>
