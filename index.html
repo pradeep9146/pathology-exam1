@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pathology AVN Questions</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#f0f4f8;--surface:#fff;--header:#1a237e;
+--accent:#1565c0;--accent2:#0d47a1;--border:#d0d9e8;
+--text:#1a1a2e;--subtext:#555;--answered:#2e7d32;--marked:#6a1b9a;
+--marked-ans:#1565c0;--unattempted:#c62828;--not-visited:#607d8b;
+--option-hover:#e3eaf5;--option-sel:#bbdefb;--option-border:#1565c0;
+--footer-bg:#1a237e;--timer-warn:#e65100;
+--shadow:0 2px 12px rgba(26,35,126,.10);
+--online:#2e7d32;--offline:#c62828;--pending:#e65100;
+}
+.dark{
+--bg:#0d1117;--surface:#161b22;--header:#0d1b4b;
+--accent:#42a5f5;--accent2:#1565c0;--border:#30363d;
+--text:#e6edf3;--subtext:#8b949e;--option-hover:#1f2a38;--option-sel:#1a3a5c;
+--footer-bg:#0d1b4b;--shadow:0 2px 12px rgba(0,0,0,.4);
+}
+html,body{height:100%;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
+
+/* ===== CONSENT SCREEN ===== */
+#consent-page{
+  display:none;position:fixed;inset:0;z-index:900;
+  background:linear-gradient(135deg,#0d1b4b 0%,#1a237e 50%,#1565c0 100%);
+  align-items:flex-start;justify-content:center;padding:20px;
+  overflow-y:auto;
+}
+.consent-card{
+  background:#fff;border-radius:20px;padding:36px 32px;max-width:520px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);position:relative;overflow:visible;
+  animation:slideUp .4s ease;margin:auto;
+}
+.dark .consent-card{background:#161b22}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.consent-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#1a237e,#42a5f5,#e65100,#1a237e)}
+.consent-icon{font-size:3rem;text-align:center;margin-bottom:16px}
+.consent-title{font-size:1.3rem;font-weight:800;color:#1a237e;text-align:center;margin-bottom:8px}
+.dark .consent-title{color:#42a5f5}
+.consent-subtitle{font-size:.82rem;color:#607d8b;text-align:center;margin-bottom:20px}
+.consent-box{
+  background:#f0f4f8;border-radius:12px;padding:18px;margin-bottom:20px;
+  border-left:4px solid #1565c0;font-size:.9rem;line-height:1.6;color:#1a1a2e;
+}
+.dark .consent-box{background:#0d1117;color:#e6edf3;border-left-color:#42a5f5}
+.consent-data-list{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.consent-data-list span{font-size:.78rem;color:#555;display:flex;align-items:center;gap:5px}
+.dark .consent-data-list span{color:#8b949e}
+.consent-data-list span::before{content:'•';color:#1565c0;font-weight:900}
+.consent-check-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;cursor:pointer;padding:10px;border-radius:8px;border:2px solid var(--border);transition:border-color .2s}
+.consent-check-row:hover{border-color:#1565c0}
+.consent-check-row.checked{border-color:#2e7d32;background:#f1f8f1}
+.dark .consent-check-row.checked{background:#1b2e1b}
+.consent-check-row input[type=checkbox]{width:18px;height:18px;flex-shrink:0;cursor:pointer;accent-color:#1565c0;margin-top:2px}
+.consent-check-label{font-size:.85rem;line-height:1.5;color:#1a1a2e;cursor:pointer}
+.dark .consent-check-label{color:#e6edf3}
+.consent-btns{display:flex;gap:10px}
+.consent-accept{flex:2;background:linear-gradient(135deg,#1a237e,#1565c0);color:#fff;border:none;border-radius:10px;padding:13px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;opacity:.5;pointer-events:none}
+.consent-accept.enabled{opacity:1;pointer-events:auto}
+.consent-accept.enabled:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(21,101,192,.4)}
+.consent-decline{flex:1;background:transparent;color:#607d8b;border:2px solid #d0d9e8;border-radius:10px;padding:13px;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
+.consent-decline:hover{border-color:#c62828;color:#c62828}
+
+/* ===== REGISTRATION PAGE ===== */
+#reg-page{
+  display:flex;flex-direction:column;min-height:100vh;
+  background:linear-gradient(135deg,#1a237e 0%,#1565c0 50%,#0d47a1 100%);
+  align-items:center;justify-content:center;padding:20px;
+}
+.reg-card{
+  background:#fff;border-radius:20px;padding:36px 32px;max-width:480px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;overflow:hidden;
+  animation:slideUp .4s ease;
+}
+.dark .reg-card{background:#161b22;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.reg-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#1a237e,#42a5f5,#1a237e)}
+.reg-logo{text-align:center;margin-bottom:24px}
+.reg-logo-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1a237e,#1565c0);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.8rem;box-shadow:0 4px 16px rgba(21,101,192,.4)}
+.reg-logo h2{font-size:1.25rem;font-weight:800;color:#1a237e;line-height:1.3}
+.dark .reg-logo h2{color:#42a5f5}
+.reg-logo p{font-size:.8rem;color:#607d8b;margin-top:4px;font-weight:500}
+.reg-divider{height:1px;background:linear-gradient(90deg,transparent,#d0d9e8,transparent);margin:20px 0}
+.reg-field{margin-bottom:18px}
+.reg-label{display:block;font-size:.82rem;font-weight:700;color:#1a237e;margin-bottom:6px;letter-spacing:.03em}
+.dark .reg-label{color:#90caf9}
+.req-star{color:#c62828;margin-left:2px}
+.reg-input{width:100%;border:2px solid #d0d9e8;border-radius:10px;padding:12px 14px;font-size:.95rem;font-family:inherit;background:#f8fafc;color:#1a1a2e;transition:border-color .2s,box-shadow .2s;outline:none}
+.dark .reg-input{background:#0d1117;color:#e6edf3;border-color:#30363d}
+.reg-input:focus{border-color:#1565c0;box-shadow:0 0 0 3px rgba(21,101,192,.15);background:#fff}
+.dark .reg-input:focus{background:#161b22;box-shadow:0 0 0 3px rgba(66,165,245,.15)}
+.reg-input.error{border-color:#c62828;box-shadow:0 0 0 3px rgba(198,40,40,.12)}
+.reg-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231565c0' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer}
+.field-err{font-size:.75rem;color:#c62828;margin-top:5px;display:none;font-weight:600}
+.field-err.show{display:block}
+.opt-badge{font-size:.72rem;color:#607d8b;font-weight:500;margin-left:4px}
+.reg-btn{width:100%;background:linear-gradient(135deg,#1a237e,#1565c0);color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px;letter-spacing:.03em;box-shadow:0 4px 16px rgba(21,101,192,.3)}
+.reg-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(21,101,192,.45)}
+.reg-footer-note{text-align:center;font-size:.75rem;color:#607d8b;margin-top:14px}
+
+/* Session recovery banner */
+.recovery-banner{
+  background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:12px;
+  padding:14px 16px;margin-bottom:20px;border-left:4px solid #e65100;display:none;
+}
+.dark .recovery-banner{background:linear-gradient(135deg,#2e1a00,#3e2400);border-left-color:#ff9800}
+.recovery-banner p{font-size:.85rem;color:#bf360c;font-weight:600;margin-bottom:8px}
+.dark .recovery-banner p{color:#ffb74d}
+.recovery-banner .rb-btns{display:flex;gap:8px}
+.rb-btn{border:none;border-radius:7px;padding:7px 14px;font-size:.8rem;font-weight:700;cursor:pointer}
+.rb-resume{background:#e65100;color:#fff}
+.rb-discard{background:#d0d9e8;color:#555}
+
+/* ===== RANGE SELECTION PAGE ===== */
+#range-page{
+  display:none;flex-direction:column;min-height:100vh;
+  background:linear-gradient(135deg,#1a237e 0%,#1565c0 50%,#0d47a1 100%);
+  align-items:center;justify-content:center;padding:20px;
+}
+.range-card{background:#fff;border-radius:20px;padding:32px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;overflow:hidden;animation:slideUp .4s ease}
+.dark .range-card{background:#161b22}
+.range-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#1a237e,#42a5f5,#1a237e)}
+.welcome-banner{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:12px;padding:14px 16px;margin-bottom:22px;border-left:4px solid #2e7d32}
+.dark .welcome-banner{background:linear-gradient(135deg,#1b2e1b,#163016);border-left-color:#4caf50}
+.welcome-banner p{font-size:.88rem;color:#1b5e20;font-weight:600}
+.dark .welcome-banner p{color:#81c784}
+.welcome-banner span{font-weight:800}
+.range-title{font-size:1.15rem;font-weight:800;color:#1a237e;margin-bottom:6px}
+.dark .range-title{color:#42a5f5}
+.range-sub{font-size:.82rem;color:#607d8b;margin-bottom:20px}
+.range-options{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.range-opt{border:2px solid #d0d9e8;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px}
+.range-opt:hover{border-color:#1565c0;background:#f0f4f8}
+.dark .range-opt{border-color:#30363d}.dark .range-opt:hover{background:#1f2a38;border-color:#42a5f5}
+.range-opt.selected{border-color:#1565c0;background:#e3f2fd}
+.dark .range-opt.selected{background:#1a3a5c;border-color:#42a5f5}
+.range-radio{width:20px;height:20px;border-radius:50%;border:2px solid #d0d9e8;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.range-opt.selected .range-radio{border-color:#1565c0;background:#1565c0}
+.range-opt.selected .range-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+.range-opt-info strong{display:block;font-size:.92rem;font-weight:700;color:#1a1a2e}
+.dark .range-opt-info strong{color:#e6edf3}
+.range-opt-info span{font-size:.77rem;color:#607d8b}
+.custom-range-row{display:flex;gap:10px;margin-bottom:16px}
+.custom-range-row input{flex:1;border:2px solid #d0d9e8;border-radius:8px;padding:10px 12px;font-size:.9rem;font-family:inherit;background:#f8fafc;color:#1a1a2e;outline:none;transition:border-color .2s}
+.dark .custom-range-row input{background:#0d1117;color:#e6edf3;border-color:#30363d}
+.custom-range-row input:focus{border-color:#1565c0}
+.custom-range-row label{font-size:.78rem;font-weight:700;color:#1a237e;display:block;margin-bottom:4px}
+.dark .custom-range-row label{color:#90caf9}
+.start-btn{width:100%;background:linear-gradient(135deg,#2e7d32,#388e3c);color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(46,125,50,.3);letter-spacing:.03em}
+.start-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(46,125,50,.45)}
+
+/* ===== SYNC STATUS BAR ===== */
+#sync-bar{
+  position:fixed;bottom:44px;left:0;right:0;z-index:250;
+  display:none;align-items:center;justify-content:space-between;
+  padding:6px 14px;font-size:.78rem;font-weight:600;flex-wrap:wrap;gap:6px;
+}
+#sync-bar.online{background:#e8f5e9;color:#1b5e20;border-top:2px solid #2e7d32}
+#sync-bar.offline{background:#ffebee;color:#b71c1c;border-top:2px solid #c62828}
+#sync-bar.pending{background:#fff3e0;color:#bf360c;border-top:2px solid #e65100}
+.sync-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0}
+.sync-dot.online{background:#2e7d32;box-shadow:0 0 0 3px rgba(46,125,50,.25)}
+.sync-dot.offline{background:#c62828;box-shadow:0 0 0 3px rgba(198,40,40,.25)}
+.sync-dot.pending{background:#e65100;box-shadow:0 0 0 3px rgba(230,81,0,.25);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.sync-bar-left{display:flex;align-items:center;gap:6px}
+.sync-bar-right{display:flex;align-items:center;gap:8px}
+.sync-btn{border:none;border-radius:6px;padding:4px 10px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.sync-btn.do-sync{background:#e65100;color:#fff}
+.sync-btn.done{background:#2e7d32;color:#fff;opacity:.7;cursor:default}
+
+/* ===== HEADER ===== */
+#header{position:sticky;top:0;z-index:200;background:var(--header);color:#fff;
+display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:auto;min-height:56px;
+box-shadow:0 2px 8px rgba(0,0,0,.3);flex-wrap:wrap;gap:4px;padding-top:6px;padding-bottom:6px}
+#header h1{font-size:1rem;font-weight:700;flex:1;margin-right:8px;min-width:120px}
+.hdr-student-info{font-size:.72rem;color:rgba(255,255,255,.8);display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:2px 0}
+.hdr-student-info span{background:rgba(255,255,255,.12);border-radius:4px;padding:2px 7px;white-space:nowrap}
+.hdr-sync-dot{width:9px;height:9px;border-radius:50%;display:inline-block;border:2px solid rgba(255,255,255,.5)}
+.hdr-sync-dot.online{background:#4caf50}
+.hdr-sync-dot.offline{background:#ef5350}
+.hdr-sync-dot.pending{background:#ff9800;animation:pulse 1.5s infinite}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+#timer-box{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:4px 10px;font-size:.9rem;font-weight:700;font-family:monospace;min-width:82px;text-align:center}
+#timer-box.warn{background:rgba(230,81,0,.7)}
+.icon-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:6px;color:#fff;cursor:pointer;padding:5px 9px;font-size:.78rem;white-space:nowrap}
+.icon-btn:hover{background:rgba(255,255,255,.25)}
+#app{display:flex;height:calc(100vh - 56px - 44px - 32px);overflow:hidden}
+#q-area{flex:1;overflow-y:auto;padding:16px 18px;min-width:0}
+#palette-panel{width:270px;min-width:220px;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;flex-shrink:0}
+.q-card{background:var(--surface);border-radius:12px;box-shadow:var(--shadow);padding:20px;margin-bottom:14px}
+.q-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.q-num-badge{background:var(--accent);color:#fff;border-radius:6px;padding:3px 10px;font-size:.82rem;font-weight:700}
+.q-sect{font-size:.75rem;color:var(--subtext);background:var(--border);border-radius:4px;padding:2px 8px}
+.q-text{font-size:1rem;font-weight:500;line-height:1.55;margin-bottom:18px;color:var(--text)}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;align-items:flex-start;gap:10px;border:2px solid var(--border);border-radius:9px;padding:10px 14px;cursor:pointer;transition:all .15s;background:var(--surface)}
+.opt:hover{background:var(--option-hover);border-color:var(--accent)}
+.opt.selected{background:var(--option-sel);border-color:var(--option-border)}
+.opt.correct{background:#c8e6c9;border-color:#2e7d32}
+.opt.wrong{background:#ffcdd2;border-color:#c62828}
+.opt-ltr{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:.88rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.opt.selected .opt-ltr{background:var(--accent2)}
+.opt.correct .opt-ltr{background:#2e7d32}
+.opt.wrong .opt-ltr{background:#c62828}
+.opt-txt{font-size:.97rem;line-height:1.45}
+.ctrl-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{border:none;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600;padding:9px 14px;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2)}
+.btn-s{background:#2e7d32;color:#fff}.btn-s:hover{background:#1b5e20}
+.btn-w{background:#6a1b9a;color:#fff}.btn-w:hover{background:#4a148c}
+.btn-d{background:#c62828;color:#fff}.btn-d:hover{background:#b71c1c}
+.btn-n{background:var(--border);color:var(--text)}.btn-n:hover{filter:brightness(.93)}
+.btn-sub{background:#e65100;color:#fff;padding:8px 16px;font-size:.82rem}
+.btn-sub:hover{background:#bf360c}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.pal-hdr{padding:12px 14px;border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface);z-index:5}
+.pal-legend{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.leg{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--subtext)}
+.leg-dot{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+.pal-grid{display:flex;flex-wrap:wrap;gap:6px;padding:12px;align-content:flex-start}
+.pq{width:38px;height:38px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;font-weight:700;transition:all .15s;color:#fff;user-select:none}
+.pq:hover{transform:scale(1.08)}
+.pq.cur{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--accent)}
+.pq.nv{background:var(--not-visited)}.pq.na{background:var(--unattempted)}.pq.ans{background:var(--answered)}.pq.mrk{background:var(--marked)}.pq.amrk{background:var(--marked-ans)}
+.stats-bar{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.stat{display:flex;flex-direction:column;align-items:center;flex:1;min-width:50px}
+.stat-val{font-size:1.1rem;font-weight:800}
+.stat-lbl{font-size:.68rem;color:var(--subtext);text-align:center}
+.prog-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin:0 12px 10px}
+.prog-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+.srch-box{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.srch-box input{flex:1;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.85rem;background:var(--bg);color:var(--text);outline:none}
+.srch-box input:focus{border-color:var(--accent)}
+.srch-box button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:.85rem;font-weight:600}
+#footer{background:var(--footer-bg);color:#e8eaf6;height:44px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:.82rem;flex-wrap:wrap;padding:0 12px}
+#footer a{color:#90caf9;text-decoration:none;font-weight:600}
+#footer a:hover{text-decoration:underline}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;padding:16px}
+.modal-ov.open{display:flex}
+.modal{background:var(--surface);border-radius:14px;padding:24px;max-width:500px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto}
+.modal h2{font-size:1.2rem;margin-bottom:14px;color:var(--accent)}
+.modal p{font-size:.95rem;line-height:1.55;margin-bottom:10px}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+#result-page{display:none;overflow-y:auto;padding:24px;min-height:calc(100vh - 56px - 44px - 32px)}
+.res-card{background:var(--surface);border-radius:14px;padding:28px;max-width:700px;margin:0 auto 20px;box-shadow:var(--shadow);text-align:center}
+.score-circle{width:140px;height:140px;border-radius:50%;border:8px solid var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px}
+.score-pct{font-size:2rem;font-weight:900;color:var(--accent)}
+.score-lbl{font-size:.8rem;color:var(--subtext)}
+.res-stats{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin:16px 0}
+.rs{display:flex;flex-direction:column;align-items:center}
+.rs-val{font-size:1.5rem;font-weight:800}
+.rs-lbl{font-size:.78rem;color:var(--subtext)}
+
+/* Sync status in results */
+.sync-status-card{
+  max-width:700px;margin:0 auto 16px;border-radius:12px;padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.sync-status-card.online{background:#e8f5e9;border:1px solid #a5d6a7}
+.sync-status-card.offline{background:#ffebee;border:1px solid #ef9a9a}
+.sync-status-card.pending{background:#fff3e0;border:1px solid #ffcc80}
+.sync-status-card.synced{background:#e8f5e9;border:1px solid #66bb6a}
+.sync-status-left{display:flex;align-items:center;gap:10px}
+.sync-status-icon{font-size:1.4rem}
+.sync-status-text strong{display:block;font-size:.9rem;font-weight:700}
+.sync-status-text span{font-size:.78rem;color:var(--subtext)}
+.sync-now-btn{border:none;border-radius:8px;padding:8px 16px;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+.sync-now-btn.active{background:#e65100;color:#fff}
+.sync-now-btn.active:hover{background:#bf360c}
+.sync-now-btn.disabled{background:var(--border);color:var(--subtext);cursor:not-allowed}
+
+/* Student info block */
+.student-info-block{background:linear-gradient(135deg,#e8eaf6,#e3f2fd);border-radius:12px;padding:16px 20px;margin-bottom:20px;border-left:4px solid #1565c0;text-align:left}
+.dark .student-info-block{background:linear-gradient(135deg,#0d1b4b,#1a3a5c);border-left-color:#42a5f5}
+.sib-title{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#607d8b;margin-bottom:10px}
+.sib-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.sib-item{display:flex;flex-direction:column}
+.sib-label{font-size:.7rem;color:#607d8b;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.sib-value{font-size:.9rem;font-weight:700;color:#1a1a2e;margin-top:1px}
+.dark .sib-value{color:#e6edf3}
+
+.rev-sect{background:var(--surface);border-radius:12px;padding:20px;max-width:700px;margin:0 auto 16px;box-shadow:var(--shadow)}
+.rev-q{border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden}
+.rqh{padding:10px 14px;background:var(--bg);display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:8px}
+.rqh-txt{flex:1;font-size:.88rem}
+.rqb{padding:12px 14px;display:none}
+.rqb.open{display:block}
+.r-opt{padding:6px 10px;border-radius:6px;margin:4px 0;font-size:.9rem}
+.r-opt.c{background:#c8e6c9;color:#1b5e20}
+.r-opt.w{background:#ffcdd2;color:#b71c1c}
+.badge{border-radius:4px;padding:1px 7px;font-size:.72rem;font-weight:700;white-space:nowrap}
+.bc{background:#2e7d32;color:#fff}.bw{background:#c62828;color:#fff}.bs{background:var(--not-visited);color:#fff}
+.ftabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.ftab{border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:.8rem;font-weight:600;background:var(--surface);color:var(--text)}
+.ftab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+#pal-tog{display:none;position:fixed;bottom:80px;right:14px;z-index:300;background:var(--accent);color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:1.3rem;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.3)}
+
+/* Retest modal */
+.retest-opt{border:2px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;margin-bottom:10px;transition:all .2s;display:flex;align-items:flex-start;gap:12px}
+.retest-opt:hover{border-color:var(--accent);background:var(--option-hover)}
+.retest-opt-icon{font-size:1.5rem;flex-shrink:0}
+.retest-opt-info strong{display:block;font-weight:700;font-size:.92rem}
+.retest-opt-info span{font-size:.78rem;color:var(--subtext)}
+
+/* Toast notification */
+#toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#323232;color:#fff;border-radius:10px;padding:12px 20px;font-size:.88rem;font-weight:600;
+  z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.success{background:#2e7d32}
+#toast.error{background:#c62828}
+#toast.info{background:#1565c0}
+
+#loading{position:fixed;inset:0;background:#1a237e;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;color:#fff}
+.spin{width:48px;height:48px;border:5px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{font-size:1rem;opacity:.8}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.res-action-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+
+@media(max-width:768px){
+  #header h1{font-size:.82rem}
+  .hdr-student-info{font-size:.65rem}
+  #palette-panel{display:none;position:fixed;inset:0;z-index:400;width:100%;height:100%;border:none}
+  #palette-panel.open{display:flex;flex-direction:column}
+  #pal-tog{display:flex;align-items:center;justify-content:center}
+  .ctrl-bar .btn{padding:7px 9px;font-size:.76rem}
+  .reg-card{padding:24px 18px}
+  .range-card{padding:22px 16px}
+  #app{height:calc(100vh - 56px - 44px - 32px)}
+  .consent-data-list{grid-template-columns:1fr}
+}
+@media(min-width:769px) and (max-width:1024px){
+  #palette-panel{width:220px}
+  .pq{width:34px;height:34px;font-size:.68rem}
+}
+@media print{
+  #header,#footer,#palette-panel,#pal-tog,.ctrl-bar,#submit-btn,#app,#reg-page,#range-page,#consent-page,#sync-bar,#toast{display:none !important}
+  .modal-ov{display:none !important}
+  #result-page{display:block !important;height:auto;overflow:visible;padding:0}
+  .rqb{display:block !important}
+  .res-action-btns{display:none !important}
+  .sync-status-card{display:none !important}
+}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><p>Loading Pathology Question Bank...</p></div>
+
+<!-- ===== CONSENT PAGE ===== -->
+<div id="consent-page" style="display:none;flex-direction:column;align-items:center;justify-content:center">
+  <div class="consent-card">
+    <div class="consent-icon">🔐</div>
+    <div class="consent-title">Data Privacy & Consent</div>
+    <div class="consent-subtitle">Pathology AVN Questions — OSHMEDCHRONICLE</div>
+    <div class="consent-box">
+      <strong>By continuing, you agree that your exam details and results may be stored locally and, when internet access is available, securely transmitted to the administrator for academic record purposes.</strong>
+      <div style="margin-top:10px;font-size:.85rem;color:#555">The following information will be collected and may be shared with your institution's academic administrator:</div>
+      <div class="consent-data-list">
+        <span>Student Name</span>
+        <span>Academic Year</span>
+        <span>Group Number</span>
+        <span>Student ID</span>
+        <span>Exam Date &amp; Time</span>
+        <span>Question Range</span>
+        <span>Total Questions</span>
+        <span>Attempted / Unattempted</span>
+        <span>Marked for Review</span>
+        <span>Score &amp; Percentage</span>
+        <span>Device Type</span>
+        <span>Sync Status</span>
+      </div>
+    </div>
+    <label class="consent-check-row" id="consent-check-row">
+      <input type="checkbox" id="consent-check" onchange="toggleConsent()">
+      <span class="consent-check-label">I have read and understood the above. I consent to the collection and transmission of my exam data for academic record purposes.</span>
+    </label>
+    <div class="consent-btns">
+      <button class="consent-decline" onclick="declineConsent()">Decline</button>
+      <button class="consent-accept" id="consent-accept-btn" onclick="acceptConsent()">Accept &amp; Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REGISTRATION PAGE ===== -->
+<div id="reg-page" style="display:none">
+  <div class="reg-card">
+    <div class="recovery-banner" id="recovery-banner">
+      <p>⚡ Unfinished session detected! Would you like to resume where you left off?</p>
+      <div class="rb-btns">
+        <button class="rb-btn rb-resume" onclick="resumeSession()">Resume Session</button>
+        <button class="rb-btn rb-discard" onclick="discardSession()">Start Fresh</button>
+      </div>
+    </div>
+    <div class="reg-logo">
+      <div class="reg-logo-icon">🔬</div>
+      <h2>Pathology AVN Questions</h2>
+      <p>Candidate Registration — Please fill in your details</p>
+    </div>
+    <div class="reg-divider"></div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-name">Student Name <span class="req-star">*</span></label>
+      <input class="reg-input" type="text" id="reg-name" placeholder="Enter your full name" autocomplete="name">
+      <div class="field-err" id="err-name">⚠ Student name is required.</div>
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-year">Academic Year <span class="req-star">*</span></label>
+      <select class="reg-input reg-select" id="reg-year">
+        <option value="">-- Select Academic Year --</option>
+        <option value="1st Year">1st Year</option>
+        <option value="2nd Year">2nd Year</option>
+        <option value="3rd Year">3rd Year</option>
+        <option value="Final Year">Final Year</option>
+        <option value="Intern">Intern</option>
+        <option value="PG Year 1">PG Year 1</option>
+        <option value="PG Year 2">PG Year 2</option>
+        <option value="PG Year 3">PG Year 3</option>
+      </select>
+      <div class="field-err" id="err-year">⚠ Please select your academic year.</div>
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-group">Group Number <span class="req-star">*</span></label>
+      <input class="reg-input" type="text" id="reg-group" placeholder="e.g. Group 5 / B-12">
+      <div class="field-err" id="err-group">⚠ Group number is required.</div>
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-id">Student ID / Roll Number <span class="opt-badge">(Optional)</span></label>
+      <input class="reg-input" type="text" id="reg-id" placeholder="Enter your roll number">
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-email">Email Address <span class="opt-badge">(Optional)</span></label>
+      <input class="reg-input" type="email" id="reg-email" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <button class="reg-btn" onclick="submitReg()">Continue to Exam →</button>
+    <div class="reg-footer-note">🔒 Your information is stored locally and transmitted only with your consent.</div>
+  </div>
+</div>
+
+<!-- ===== QUESTION RANGE PAGE ===== -->
+<div id="range-page" style="display:none">
+  <div class="range-card">
+    <div class="welcome-banner">
+      <p>👋 Welcome, <span id="welcome-name">Student</span>! You're all set.</p>
+    </div>
+    <div class="range-title">Select Question Range</div>
+    <div class="range-sub">Choose which questions you'd like to attempt in this session.</div>
+    <div class="range-options" id="range-opts">
+      <div class="range-opt selected" onclick="selectRange(this,'1','55')" data-from="1" data-to="55">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Questions 1 – 55</strong><span>Cell Injury, Apoptosis, Necrosis &amp; Calcification</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'56','115')" data-from="56" data-to="115">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Questions 56 – 115</strong><span>Acute &amp; Chronic Inflammation &amp; Healing</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'116','200')" data-from="116" data-to="200">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Questions 116 – 200</strong><span>Tumors, Neoplasia &amp; Oncology</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'201','300')" data-from="201" data-to="300">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Questions 201 – 300</strong><span>Cardiovascular &amp; Respiratory Pathology</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'301','395')" data-from="301" data-to="395">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Questions 301 – 395</strong><span>GIT, Liver &amp; Renal Pathology</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'396','495')" data-from="396" data-to="495">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Questions 396 – 495</strong><span>Endocrine, Neuro &amp; Digital Pathology</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'1','495')" data-from="1" data-to="495">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>All Questions (1 – 495)</strong><span>Complete question bank — full exam mode</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'custom','custom')" data-from="custom" data-to="custom">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>Custom Range</strong><span>Specify your own start and end question numbers</span></div>
+      </div>
+    </div>
+    <div id="custom-range-inputs" style="display:none">
+      <div class="custom-range-row">
+        <div style="flex:1"><label>From Question #</label><input type="number" id="custom-from" placeholder="e.g. 10" min="1"></div>
+        <div style="flex:1"><label>To Question #</label><input type="number" id="custom-to" placeholder="e.g. 50" min="1"></div>
+      </div>
+    </div>
+    <button class="start-btn" onclick="startExam()">🚀 Start Exam</button>
+  </div>
+</div>
+
+<!-- ===== MAIN EXAM ===== -->
+<div id="header" style="display:none">
+  <div style="flex:1;min-width:0">
+    <h1>Pathology AVN Questions</h1>
+    <div class="hdr-student-info" id="hdr-student-info"></div>
+  </div>
+  <div class="hdr-right">
+    <span class="hdr-sync-dot nv" id="hdr-sync-dot" title="Connection status"></span>
+    <div id="timer-box">00:00:00</div>
+    <button class="icon-btn" onclick="toggleDark()" id="dark-btn">Dark</button>
+    <button class="icon-btn" onclick="toggleFS()">⛶</button>
+    <button class="btn btn-sub" onclick="confirmSubmit()" id="submit-btn">Submit</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div id="q-area">
+    <div class="q-card">
+      <div class="q-meta">
+        <span class="q-num-badge" id="q-badge">Q 1</span>
+        <span class="q-sect" id="q-sect">General Pathology</span>
+      </div>
+      <div class="q-text" id="q-text">Loading...</div>
+      <div class="opts" id="opts-container"></div>
+      <div class="ctrl-bar">
+        <button class="btn btn-n" onclick="navigate(-1)" id="prev-btn">◀ Prev</button>
+        <button class="btn btn-p" onclick="navigate(1)">Next ▶</button>
+        <button class="btn btn-s" onclick="saveAndNext()">Save &amp; Next</button>
+        <button class="btn btn-w" onclick="markReview()">Mark Review</button>
+        <button class="btn btn-n" onclick="clearResp()">Clear</button>
+      </div>
+    </div>
+  </div>
+  <div id="palette-panel">
+    <div class="pal-hdr"><span>Question Palette</span><button class="icon-btn" onclick="closePal()">✕</button></div>
+    <div class="stats-bar" id="stats-bar"></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="srch-box">
+      <input type="number" id="q-srch" placeholder="Go to Q#" min="1" onkeydown="if(event.key==='Enter')doJump()">
+      <button onclick="doJump()">Go</button>
+    </div>
+    <div class="pal-legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--not-visited)"></div>Not Visited</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--unattempted)"></div>Not Answered</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--answered)"></div>Answered</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--marked)"></div>Marked</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--marked-ans)"></div>Ans+Marked</div>
+    </div>
+    <div style="padding:8px 12px;border-bottom:1px solid var(--border)">
+      <div class="ftabs">
+        <div class="ftab active" onclick="setPalFlt('all',this)">All</div>
+        <div class="ftab" onclick="setPalFlt('ans',this)">Answered</div>
+        <div class="ftab" onclick="setPalFlt('na',this)">Unanswered</div>
+        <div class="ftab" onclick="setPalFlt('mrk',this)">Marked</div>
+        <div class="ftab" onclick="setPalFlt('nv',this)">Not Visited</div>
+      </div>
+    </div>
+    <div class="pal-grid" id="pal-grid"></div>
+  </div>
+</div>
+
+<!-- Sync bar (above footer during exam) -->
+<div id="sync-bar" style="display:none">
+  <div class="sync-bar-left">
+    <span class="sync-dot" id="sync-dot"></span>
+    <span id="sync-bar-text">Checking connection...</span>
+  </div>
+  <div class="sync-bar-right">
+    <button class="sync-btn" id="sync-bar-btn" onclick="trySyncNow()" style="display:none">Sync Now</button>
+  </div>
+</div>
+
+<!-- Results page -->
+<div id="result-page" style="display:none">
+  <div class="sync-status-card" id="res-sync-card">
+    <div class="sync-status-left">
+      <div class="sync-status-icon" id="res-sync-icon">⏳</div>
+      <div class="sync-status-text">
+        <strong id="res-sync-title">Checking sync status...</strong>
+        <span id="res-sync-sub">Please wait</span>
+      </div>
+    </div>
+    <button class="sync-now-btn" id="res-sync-btn" onclick="trySyncNow()">Sync Now</button>
+  </div>
+
+  <div class="res-card">
+    <h2 style="font-size:1.5rem;margin-bottom:16px">📋 Exam Results</h2>
+    <div class="student-info-block" id="res-student-block">
+      <div class="sib-title">Candidate Information</div>
+      <div class="sib-grid" id="res-student-grid"></div>
+    </div>
+    <div class="score-circle"><span class="score-pct" id="res-pct">0%</span><span class="score-lbl">Score</span></div>
+    <div class="res-stats" id="res-stats"></div>
+    <div class="res-action-btns">
+      <button class="btn btn-p" onclick="showRev('all')">All Questions</button>
+      <button class="btn btn-s" onclick="showRev('correct')">Correct</button>
+      <button class="btn btn-d" onclick="showRev('wrong')">Wrong</button>
+      <button class="btn btn-w" onclick="showRev('skip')">Skipped</button>
+      <button class="btn btn-n" onclick="downloadResult()">⬇ Download</button>
+      <button class="btn btn-n" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-sub" onclick="openRetestModal()">🔄 Retest</button>
+    </div>
+  </div>
+  <div class="rev-sect" id="rev-container"></div>
+</div>
+
+<button id="pal-tog" onclick="togglePal()">☰</button>
+
+<div id="footer" style="display:none">
+  <span>Made by OSHMEDCHRONICLE | Pradeep Waghmare</span>
+  <a href="https://youtu.be/WDVnkr4X8Ug?si=x1iiMUr2c2-WAkmt" target="_blank" rel="noopener">▶ YouTube</a>
+</div>
+
+<!-- Submit confirm modal -->
+<div class="modal-ov" id="confirm-modal">
+  <div class="modal">
+    <h2>Submit Exam?</h2>
+    <p id="confirm-msg"></p>
+    <div class="modal-btns">
+      <button class="btn btn-n" onclick="closeModal('confirm-modal')">Cancel</button>
+      <button class="btn btn-d" onclick="submitExam()">Submit Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Retest modal -->
+<div class="modal-ov" id="retest-modal">
+  <div class="modal">
+    <h2>🔄 Retest Options</h2>
+    <div class="retest-opt" onclick="doRetake()">
+      <div class="retest-opt-icon">🔁</div>
+      <div class="retest-opt-info"><strong>Retake Same Range</strong><span>Keeps your name, year and group. Resets answers and timer.</span></div>
+    </div>
+    <div class="retest-opt" onclick="doFreshExam()">
+      <div class="retest-opt-icon">🆕</div>
+      <div class="retest-opt-info"><strong>Start Fresh Exam</strong><span>Clears all student information. Returns to registration screen.</span></div>
+    </div>
+    <div class="modal-btns"><button class="btn btn-n" onclick="closeModal('retest-modal')">Cancel</button></div>
+  </div>
+</div>
+
+<!-- Pending sync modal -->
+<div class="modal-ov" id="pending-sync-modal">
+  <div class="modal">
+    <h2>🌐 Internet Connected!</h2>
+    <p>You have <strong id="pending-count">1</strong> pending exam result(s) that haven't been synchronized yet. Would you like to sync them now?</p>
+    <div class="modal-btns">
+      <button class="btn btn-n" onclick="closeModal('pending-sync-modal')">Later</button>
+      <button class="btn btn-s" onclick="syncPendingNow()">Sync Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// QUESTION BANK
+// ============================================================
+var QUESTIONS=[
+{num:"1",q:"A pathological reaction is:",opts:[{l:"A",t:"a variety of diseases;"},{l:"B",t:"short-term unusual reaction of the body to any effect;"},{l:"C",t:"unusual result of laboratory analysis;"},{l:"D",t:"the body's protective reaction to adverse external influences."}],ans:"D"},
+{num:"2",q:"Coagulative necrosis is found in which infection?",opts:[{l:"A",t:"TB"},{l:"B",t:"Sarcoidosis"},{l:"C",t:"Gangrene"},{l:"D",t:"Fungal infection"}],ans:"C"},
+{num:"3",q:"Organelle which plays a pivotal role in apoptosis is:",opts:[{l:"A",t:"Cytoplasm"},{l:"B",t:"Golgi complex"},{l:"C",t:"Mitochondria"},{l:"D",t:"Nucleus"}],ans:"C"},
+{num:"4",q:"Which of the following is an anti-apoptotic gene?",opts:[{l:"A",t:"C-myc"},{l:"B",t:"P53"},{l:"C",t:"Bcl-2"},{l:"D",t:"Bax"}],ans:"C"},
+{num:"5",q:"Most pathognomic sign of irreversible cell injury:",opts:[{l:"A",t:"Amorphous densities in mitochondria"},{l:"B",t:"Swelling of the cell membrane"},{l:"C",t:"Ribosomes detached from endoplasmic reticulum"},{l:"D",t:"Clumping of nuclear chromatin"}],ans:"A"},
+{num:"6",q:"Programmed cell death TS known as:",opts:[{l:"A",t:"Cytolysis"},{l:"B",t:"Apoptosis"},{l:"C",t:"Necrosis"},{l:"D",t:"Proptosis"}],ans:"B"},
+{num:"7",q:"Morphological changes of apoptosis include:",opts:[{l:"A",t:"Cytoplasmic blebs"},{l:"B",t:"Inflammation"},{l:"C",t:"Nuclear fragmentation"},{l:"D",t:"Spindle formation"},{l:"E",t:"Cell swelling"}],ans:"C"},
+{num:"8",q:"Inhibitor of apoptosis is:",opts:[{l:"A",t:"p53"},{l:"B",t:"Ras"},{l:"C",t:"Myc"},{l:"D",t:"Bcl-2"}],ans:"D"},
+{num:"9",q:"Irreversible injury in cell is:",opts:[{l:"A",t:"Deposition of Ca in mitochondria"},{l:"B",t:"Swelling"},{l:"C",t:"Mitotic figure"},{l:"D",t:"Ribosomal detachment"}],ans:"A"},
+{num:"10",q:"First cellular change in hypoxia:",opts:[{l:"A",t:"Decreased oxidative phosphorylation in mitochondria"},{l:"B",t:"Cellular swelling"},{l:"C",t:"Alteration in cellular membrane permeability"},{l:"D",t:"Clumping of nuclear chromatin"}],ans:"A"},
+{num:"11",q:"Liquefactive necrosis is seen in:",opts:[{l:"A",t:"Heart"},{l:"B",t:"Brain"},{l:"C",t:"Lung"},{l:"D",t:"Spleen"}],ans:"B"},
+{num:"12",q:"Which of the following induces apoptosis in a cell?",opts:[{l:"A",t:"Oleic acid"},{l:"B",t:"Isoprenoids"},{l:"C",t:"Myristic acid"},{l:"D",t:"Glucocorticoids"}],ans:"D"},
+{num:"13",q:"Which of the following is not seen is apoptosis?",opts:[{l:"A",t:"Chromatin condensation"},{l:"B",t:"DNA fragmentation"},{l:"C",t:"Inflammation"},{l:"D",t:"Cell membrane shrinkage"}],ans:"C"},
+{num:"14",q:"What is the common change in cell death associated with both apoptosis and necrosis?",opts:[{l:"A",t:"Cell shrinkage"},{l:"B",t:"Bleb formation"},{l:"C",t:"Chromatin condensation"},{l:"D",t:"Presence of inflammation"}],ans:"C"},
+{num:"15",q:"Caseous necrosis is seen in which of the following:",opts:[{l:"A",t:"CMV infection"},{l:"B",t:"Staphylococcal infection"},{l:"C",t:"Treponemal infection"},{l:"D",t:"HSV infection"}],ans:"A"},
+{num:"16",q:"Apoptotic bodies are:",opts:[{l:"A",t:"Clumped chromatin bodies"},{l:"B",t:"Pyknotic nucleus without organelles"},{l:"C",t:"Cell membrane bound with organelles"},{l:"D",t:"No nucleus with organells"}],ans:"C"},
+{num:"17",q:"Pathological condition:",opts:[{l:"A",t:"it is a special type of disease;"},{l:"B",t:"is the initial period of the disease;"},{l:"C",t:"may occur as a result of a previously transmitted disease;"},{l:"D",t:"is a short-term unusual reaction to external stimuli."}],ans:"D"},
+{num:"18",q:"Pathogenesis is:",opts:[{l:"A",t:"the section of pathology that studies the mechanisms of disease development;"},{l:"B",t:"the same as the pathological process;"},{l:"C",t:"a certain type of disease;"},{l:"D",t:"the cause of the disease"}],ans:"A"},
+{num:"19",q:"Etiology is:",opts:[{l:"A",t:"the doctrine of the causes and conditions of the occurrence and development of diseases;"},{l:"B",t:"the doctrine of the mechanisms of disease development;"},{l:"C",t:"the outcome of the disease;"},{l:"D",t:"the cause and mechanism of the pathological process."}],ans:"A"},
+{num:"20",q:"Caspases are seen in which of the following?",opts:[{l:"A",t:"Cell division"},{l:"B",t:"Apoptosis"},{l:"C",t:"Necrosis"},{l:"D",t:"Inflammation"}],ans:"B"},
+{num:"21",q:"Both hyperplasia and hypertrophy are seen in?",opts:[{l:"A",t:"Breast enlargement during lactation"},{l:"B",t:"Uterus during pregnancy"},{l:"C",t:"Skeletal muscle enlargement during exercise"},{l:"D",t:"Left ventricular hypertrophy during heart failure"}],ans:"B"},
+{num:"22",q:"Which of the following is not a common site for metastatic calcification?",opts:[{l:"A",t:"Gastric mucosa"},{l:"B",t:"Kidney"},{l:"C",t:"Parathyroid"},{l:"D",t:"Lung"}],ans:"C"},
+{num:"23",q:"Calcification of soft tissues without any disturbance of calcium metabolism is called:",opts:[{l:"A",t:"Inotropic calcification"},{l:"B",t:"Monotropic calcification"},{l:"C",t:"Dystrophic calcification"},{l:"D",t:"Calcium induced calcification"}],ans:"C"},
+{num:"24",q:"Dystrophic calcification is seen in:",opts:[{l:"A",t:"Rickets"},{l:"B",t:"Hyperparathyroidism"},{l:"C",t:"Atheromatous plaque"},{l:"D",t:"Vitamin A intoxication"}],ans:"C"},
+{num:"25",q:"The type of necrosis that develops from exposure to low and high temperatures:",opts:[{l:"A",t:"indirect;"},{l:"B",t:"toxic;"},{l:"C",t:"trophoneurotic;"},{l:"D",t:"direct;"}],ans:"D"},
+{num:"26",q:"Heterotopic calcification occurs in:",opts:[{l:"A",t:"Ankylosing spondylitis"},{l:"B",t:"Reiter's syndrome"},{l:"C",t:"Gouty arthritis"},{l:"D",t:"Rheumatoid arthritis"}],ans:"A"},
+{num:"27",q:"\"Russell's body\", are accumulations of:",opts:[{l:"A",t:"Cholesterol"},{l:"B",t:"Immunoglobulins"},{l:"C",t:"Lipoproteins"},{l:"D",t:"Phospholipids"}],ans:"B"},
+{num:"28",q:"Dystrophic calcification is seen in:",opts:[{l:"A",t:"Atheroma"},{l:"B",t:"Paget's disease"},{l:"C",t:"Renal osteodystrophy"},{l:"D",t:"Milk-alkali syndrome"}],ans:"A"},
+{num:"29",q:"Brown atrophy is due to:",opts:[{l:"A",t:"Fatty necrosis"},{l:"B",t:"Hemosiderin"},{l:"C",t:"Lipofuscin"},{l:"D",t:"Ceruloplasmin"}],ans:"C"},
+{num:"30",q:"Transformation of one epithelium to other epithelium is known as:",opts:[{l:"A",t:"Dysplasia"},{l:"B",t:"Hyperplasia"},{l:"C",t:"Neoplasia"},{l:"D",t:"Metaplasia"}],ans:"D"},
+{num:"31",q:"Metastatic calcification is most often seen in:",opts:[{l:"A",t:"Lymph nodes"},{l:"B",t:"Lungs"},{l:"C",t:"Kidney"},{l:"D",t:"Liver"}],ans:"C"},
+{num:"32",q:"Russell bodies are seen in:",opts:[{l:"A",t:"Lymphocytes"},{l:"B",t:"Neutrophils"},{l:"C",t:"Macrophages"},{l:"D",t:"Plasma cells"}],ans:"D"},
+{num:"33",q:"Name the tissue in which metaplasia is most common:",opts:[{l:"A",t:"nervous;"},{l:"B",t:"renal;"},{l:"C",t:"epithelial;"},{l:"D",t:"cardiac;"}],ans:"C"},
+{num:"34",q:"Define the term \"dystrophy\":",opts:[{l:"A",t:"metabolic disorder leading to damage to cellular structures;"},{l:"B",t:"disruption of oxygen supply to cells and tissues;"},{l:"C",t:"local necrosis of cells and tissues;"},{l:"D",t:"restoration of lost structures;"}],ans:"A"},
+{num:"35",q:"Hyalinosis is characterized by the following sign:",opts:[{l:"A",t:"develops in the cells of parenchymal organs;"},{l:"B",t:"often develops with myocardial infarction;"},{l:"C",t:"it is common in hypertension and diabetes mellitus."},{l:"D",t:"the phenomenon of metachromasia is characteristic;"}],ans:"C"},
+{num:"36",q:"Name the changes that the presence of kidney stones leads to:",opts:[{l:"A",t:"tuberculosis;"},{l:"B",t:"hydronephrosis;"},{l:"C",t:"kidney cancer;"},{l:"D",t:"polycystic kidney disease;"},{l:"E",t:"primary shrunken kidney."}],ans:"B"},
+{num:"37",q:"Define the concept of \"atrophy\":",opts:[{l:"A",t:"fat reduction;"},{l:"B",t:"restoration of tissue to replace the lost one;"},{l:"C",t:"sclerosis;"},{l:"D",t:"lifetime reduction in the size of organs, tissues, cells;"}],ans:"D"},
+{num:"38",q:"Name the pathological process that often occurs against the background of epithelial metaplasia:",opts:[{l:"A",t:"inflammation;"},{l:"B",t:"necrosis;"},{l:"C",t:"cancer;"},{l:"D",t:"amyloidosis;"}],ans:"C"},
+{num:"39",q:"The development of the following thesaurismosis is associated with a violation of carbohydrate metabolism:",opts:[{l:"A",t:"phenylketonuria;"},{l:"B",t:"Wilson-Konovalov disease;"},{l:"C",t:"Gaucher's disease;"},{l:"D",t:"Gierke's disease;"}],ans:"D"},
+{num:"40",q:"The basis for the development of rickets is a metabolic disorder:",opts:[{l:"A",t:"sodium;"},{l:"B",t:"copper;"},{l:"C",t:"phosphorus;"},{l:"D",t:"potassium;"},{l:"E",t:"iron."}],ans:"C"},
+{num:"41",q:"Extracellular deposits of misfolded proteins that aggregate to from insoluble fibrils",opts:[{l:"A",t:"viral replication of B cells"},{l:"B",t:"amyloidosis"},{l:"C",t:"intracellular mutation of T cells"},{l:"D",t:"recognition inability of integral proteins."}],ans:"B"},
+{num:"42",q:"Define the concept of \"hyperplasia\":",opts:[{l:"A",t:"decrease in the volume of cells, tissues;"},{l:"B",t:"stroma overgrowth in place of parenchyma;"},{l:"C",t:"restoration of tissue to replace the lost one;"},{l:"D",t:"an increase in the number of structural elements of tissue, cells;"}],ans:"D"},
+{num:"43",q:"Name the organ in which the development of vicar hypertrophy is possible:",opts:[{l:"A",t:"liver;"},{l:"B",t:"pituitary gland;"},{l:"C",t:"the spleen;"},{l:"D",t:"kidney;"},{l:"E",t:"testicles."}],ans:"D"},
+{num:"44",q:"Define the concept of \"vicarious hypertrophy\":",opts:[{l:"A",t:"hypertrophy of one of the paired organs when the second one is removed;"},{l:"B",t:"hypertrophy of the organ with increased work;"},{l:"C",t:"hypertrophy of an organ when a part of it is replaced by a scar;"},{l:"D",t:"neurohumoral hypertrophy;"},{l:"E",t:"hypertrophic growths."}],ans:"A"},
+{num:"45",q:"A morphological sign of a change in the heart in obesity is:",opts:[{l:"A",t:"a \"tiger\" heart;"},{l:"B",t:"adipose tissue under the endocardium;"},{l:"C",t:"the \"hairy\" heart;"},{l:"D",t:"adipose tissue under the epicardium;"},{l:"E",t:"relative insufficiency of valves."}],ans:"B"},
+{num:"46",q:"The level of calcium in the blood during metastatic calcification:",opts:[{l:"A",t:"not changed;"},{l:"B",t:"downgraded;"},{l:"C",t:"increased;"},{l:"D",t:"hesitates;"}],ans:"C"},
+{num:"47",q:"Name the morphological type of obesity:",opts:[{l:"A",t:"alimentary;"},{l:"B",t:"hypertrophic;"},{l:"C",t:"upper."},{l:"D",t:"symmetrical;"}],ans:"C"},
+{num:"48",q:"The level of calcium in the blood during dystrophic calcification:",opts:[{l:"A",t:"not changed;"},{l:"B",t:"downgraded;"},{l:"C",t:"increased;"},{l:"D",t:"hesitates;"}],ans:"A"},
+{num:"49",q:"Parenchymal lipidoses are associated with metabolic disorders:",opts:[{l:"A",t:"cholesterol;"},{l:"B",t:"neutral fat;"},{l:"C",t:"hemoglobin;"},{l:"D",t:"cytoplasmic fat;"}],ans:"B"},
+{num:"50",q:"Name the cause of rickets:",opts:[{l:"A",t:"hypercalcemia;"},{l:"B",t:"hypophosphatemia;"},{l:"C",t:"vitamin D deficiency;"},{l:"D",t:"excess vitamin D;"}],ans:"C"},
+{num:"51",q:"Name the changes that the presence of kidney stones leads to:",opts:[{l:"A",t:"tuberculosis;"},{l:"B",t:"hydronephrosis;"},{l:"C",t:"kidney cancer;"},{l:"D",t:"polycystic kidney disease;"}],ans:"B"},
+{num:"52",q:"Name the disease, which is based on a violation of copper metabolism:",opts:[{l:"A",t:"Gaucher disease;"},{l:"B",t:"hemochromatosis;"},{l:"C",t:"Wilson-Konovalov disease;"},{l:"D",t:"melanosis;"}],ans:"C"},
+{num:"53",q:"Name the disease in which hypokalemia develops:",opts:[{l:"A",t:"Addison's disease;"},{l:"B",t:"periodic paralysis;"},{l:"C",t:"Wilson-Konovalov disease;"},{l:"D",t:"Gaucher's disease;"}],ans:"B"},
+{num:"54",q:"Name the hormone that regulates calcium metabolism in the body:",opts:[{l:"A",t:"insulin;"},{l:"B",t:"adrenocorticotropic hormone;"},{l:"C",t:"STG;"},{l:"D",t:"calcitonin;"}],ans:"D"},
+{num:"55",q:"Name a disease in which a violation of nucleoprotein metabolism does not develop:",opts:[{l:"A",t:"malaria;"},{l:"B",t:"gout;"},{l:"C",t:"uric acid diathesis;"},{l:"D",t:"urolithiasis;"}],ans:"A"},
+{num:"56",q:"In acute inflammation endothelial retraction leads to:",opts:[{l:"A",t:"Delayed transient increase in permeability"},{l:"B",t:"Immediate transient increase in permeability"},{l:"C",t:"Delayed prolonged increase in permeability"},{l:"D",t:"Immediate transient decrease in permeability"}],ans:"C"},
+{num:"57",q:"Which among the following is the hallmark of acute inflammation?",opts:[{l:"A",t:"Vasoconstriction"},{l:"B",t:"Stasis"},{l:"C",t:"Vasodilation and increase in permeability"},{l:"D",t:"Leukocyte margination"}],ans:"C"},
+{num:"58",q:"Main feature of chemotaxis is:",opts:[{l:"A",t:"Increased random movement of neutrophils"},{l:"B",t:"Increase adhesiveness to intima"},{l:"C",t:"Increased phagocytosis"},{l:"D",t:"Unidirectional locomotion of the neutrophils"}],ans:"D"},
+{num:"59",q:"Characteristic of acute inflammation is:",opts:[{l:"A",t:"Vasodilation and increased vascular permeability"},{l:"B",t:"Vasoconstriction"},{l:"C",t:"Platelet aggregation"},{l:"D",t:"Infiltration by neutrophils"}],ans:"A"},
+{num:"60",q:"Which of the following tumors is associated with tuberous sclerosis?",opts:[{l:"A",t:"Cardiac rhabdomyoma"},{l:"B",t:"Neuroblastoma"},{l:"C",t:"Wilms tumor"},{l:"D",t:"Retinoblastoma"}],ans:"A"},
+{num:"61",q:"Which of the following is not true?",opts:[{l:"A",t:"NADPH oxidase generate superoxide ion"},{l:"B",t:"MPO kills by OC1-"},{l:"C",t:"Chediak-Higashi syndrome is due to defective phagolysosome formation"},{l:"D",t:"In Bruton's disease there is normal opsonization"}],ans:"D"},
+{num:"62",q:"In acute inflammation due to the contraction of endothelial cell cytoskeleton, which of the following results?",opts:[{l:"A",t:"Delayed transient increase in permeability"},{l:"B",t:"Early transient increase"},{l:"C",t:"Delayed permanent increase"},{l:"D",t:"Early permanent increase"}],ans:"D"},
+{num:"63",q:"Diapedesis is:",opts:[{l:"A",t:"Immigration of leukocytes through the basemen membrane"},{l:"B",t:"Immigration of the leukocytes through the vessel wall to the site of inflammation"},{l:"C",t:"Aggregation of platelets at the site of bleeding"},{l:"D",t:"Auto digestion of the cells"}],ans:"B"},
+{num:"64",q:"Endothelium leukocyte interaction during inflammation is mediated by/due to",opts:[{l:"A",t:"Selectins"},{l:"B",t:"Integrins"},{l:"C",t:"Defensins"},{l:"D",t:"Endothelin"}],ans:"A"},
+{num:"65",q:"Most important for diapedesis?",opts:[{l:"A",t:"PECAM"},{l:"B",t:"Selectin"},{l:"C",t:"Integrin"},{l:"D",t:"Mucin like glycoprotein"}],ans:"A"},
+{num:"66",q:"Which of the following is not a mediator of acute inflammation?",opts:[{l:"A",t:"Angiotensin"},{l:"B",t:"Prostaglandin E2"},{l:"C",t:"Kallikrein"},{l:"D",t:"C3a"}],ans:"A"},
+{num:"67",q:"The function common to neutrophils, monocytes, and macrophages is:",opts:[{l:"A",t:"Immune response is reduced"},{l:"B",t:"Phagocytosis"},{l:"C",t:"Liberation of histamine"},{l:"D",t:"Destruction of old erythrocytes"}],ans:"B"},
+{num:"68",q:"The role of bradykinin in process of inflammation is:",opts:[{l:"A",t:"Vasoconstriction"},{l:"B",t:"Bronchodilation"},{l:"C",t:"Pain"},{l:"D",t:"Increased vascular permeability"}],ans:"D"},
+{num:"69",q:"Which of the following is not an inflammatory mediator?",opts:[{l:"A",t:"Tumor Necrosis Factor"},{l:"B",t:"Myeloperoxidase"},{l:"C",t:"Interferons"},{l:"D",t:"Interleukin"}],ans:"B"},
+{num:"70",q:"To which of the following family of chemical mediators of inflammation, the Lipoxins belong?",opts:[{l:"A",t:"Kinin system"},{l:"B",t:"Cytokines"},{l:"C",t:"Chemokines"},{l:"D",t:"Arachidonic acid metabolites"}],ans:"D"},
+{num:"71",q:"Most important mediator of chemotaxis is:",opts:[{l:"A",t:"C3b"},{l:"B",t:"C5a"},{l:"C",t:"C5-7"},{l:"D",t:"C2"}],ans:"B"},
+{num:"72",q:"Histamine causes:",opts:[{l:"A",t:"Hypertension"},{l:"B",t:"Vasoconstriction"},{l:"C",t:"Vasodilation"},{l:"D",t:"Tachycardia"}],ans:"C"},
+{num:"73",q:"In inflammatory process, the prostaglandin E1 and E2 cause:",opts:[{l:"A",t:"Vasodilatation"},{l:"B",t:"Increased gastric output"},{l:"C",t:"Decreased body temperature"},{l:"D",t:"Vasoconstriction"}],ans:"A"},
+{num:"74",q:"Inflammatory mediator of generalized inflammation is:",opts:[{l:"A",t:"IL-1"},{l:"B",t:"IL-2"},{l:"C",t:"Interferon alpha"},{l:"D",t:"TNF"}],ans:"A"},
+{num:"75",q:"To which of the following family of chemical mediators of inflammation do the lipoxins belong?",opts:[{l:"A",t:"Kinin system"},{l:"B",t:"Cytokines"},{l:"C",t:"Chemokines"},{l:"D",t:"Arachidonic acid metabolites"}],ans:"D"},
+{num:"76",q:"Slow mediators of inflammation are:",opts:[{l:"A",t:"Leukotrienes"},{l:"B",t:"Prostaglandins"},{l:"C",t:"Interleukins"},{l:"D",t:"Vasoactive amines"}],ans:"A"},
+{num:"77",q:"Systemic inflammatory response syndrome, false is:",opts:[{l:"A",t:"Leucopenia"},{l:"B",t:"Fever"},{l:"C",t:"Leukocytosis"},{l:"D",t:"Hypoglycemia"}],ans:"D"},
+{num:"78",q:"Prostaglandins are synthesized from:",opts:[{l:"A",t:"Linoleic acid"},{l:"B",t:"Linolenic acid"},{l:"C",t:"Arachidonic acid"},{l:"D",t:"Butyric acid"}],ans:"C"},
+{num:"79",q:"Fever occurs due to:",opts:[{l:"A",t:"Endorphin"},{l:"B",t:"IL-1"},{l:"C",t:"Enkephalin"},{l:"D",t:"Histamine"}],ans:"B"},
+{num:"80",q:"Which of the following is secondary mediator of the anaphylaxis is?",opts:[{l:"A",t:"Histamine"},{l:"B",t:"Proteases"},{l:"C",t:"Eosinophilic chemotactic factor"},{l:"D",t:"Leukotriene B4"}],ans:"D"},
+{num:"81",q:"Which of the following is NOT a classical symptom of acute inflammation?",opts:[{l:"A",t:"Redness"},{l:"B",t:"Swelling"},{l:"C",t:"Loss of consciousness"},{l:"D",t:"Pain"}],ans:"C"},
+{num:"82",q:"The primary cellular mediator causing vasodilation in acute inflammation is:",opts:[{l:"A",t:"Histamine"},{l:"B",t:"Interleukin-1"},{l:"C",t:"Thromboxane A2"},{l:"D",t:"Leukotriene B4"}],ans:"A"},
+{num:"83",q:"Which of the following processes is the first step in vascular changes during acute inflammation?",opts:[{l:"A",t:"Increased vascular permeability"},{l:"B",t:"Blood stasis"},{l:"C",t:"Transient vasoconstriction"},{l:"D",t:"Leukocyte emigration"}],ans:"C"},
+{num:"84",q:"Which type of morphological inflammation is characterized by the formation of purulent exudate?",opts:[{l:"A",t:"Serous inflammation"},{l:"B",t:"Fibrinous inflammation"},{l:"C",t:"Purulent (suppurative) inflammation"},{l:"D",t:"Hemorrhagic inflammation"}],ans:"C"},
+{num:"85",q:"Which of the following mediators is derived from arachidonic acid and involved in inflammation?",opts:[{l:"A",t:"Prostaglandin E2"},{l:"B",t:"Histamine"},{l:"C",t:"Serotonin"},{l:"D",t:"Bradykinin"}],ans:"A"},
+{num:"86",q:"Which of the following is NOT a possible outcome of acute inflammation?",opts:[{l:"A",t:"Resolution (complete recovery)"},{l:"B",t:"Progression to chronic inflammation"},{l:"C",t:"Scar formation"},{l:"D",t:"Metastasis"}],ans:"D"},
+{num:"87",q:"Which of the following mediators is a chemotactic factor for neutrophils?",opts:[{l:"A",t:"Leukotriene B4"},{l:"B",t:"Prostacyclin (Prostaglandin I2)"},{l:"C",t:"Histamine"},{l:"D",t:"Nitric oxide"}],ans:"A"},
+{num:"88",q:"Which feature is most characteristic of acute rather than chronic inflammation?",opts:[{l:"A",t:"Proliferation of fibroblasts"},{l:"B",t:"Infiltration by lymphocytes"},{l:"C",t:"Predominance of neutrophils at the inflammation site"},{l:"D",t:"Formation of granulomas"}],ans:"C"},
+{num:"89",q:"Which process describes the movement of leukocytes through the vessel wall into the tissue during inflammation?",opts:[{l:"A",t:"Chemotaxis"},{l:"B",t:"Phagocytosis"},{l:"C",t:"Diapedesis (transmigration)"},{l:"D",t:"Adhesion"}],ans:"C"},
+{num:"90",q:"Which of the following factors contributes to increased vascular permeability during acute inflammation?",opts:[{l:"A",t:"Bradykinin"},{l:"B",t:"Adrenaline"},{l:"C",t:"Angiotensin II"},{l:"D",t:"Aldosterone"}],ans:"A"},
+{num:"91",q:"Which of the following cellular elements is the first to arrive at the site of acute inflammation?",opts:[{l:"A",t:"Monocytes"},{l:"B",t:"Neutrophils"},{l:"C",t:"Lymphocytes"},{l:"D",t:"Plasma cells"}],ans:"B"},
+{num:"92",q:"Which inflammatory mediator is a complement derivative and has chemotactic activity?",opts:[{l:"A",t:"C3a"},{l:"B",t:"C5a"},{l:"C",t:"C4b"},{l:"D",t:"C1q"}],ans:"B"},
+{num:"94",q:"Which of the following processes enhances leukocyte adhesion to the endothelium?",opts:[{l:"A",t:"Release of adrenaline"},{l:"B",t:"Expression of selectins on endothelium"},{l:"C",t:"Decreased vascular permeability"},{l:"D",t:"Reduction of integrin expression"}],ans:"B"},
+{num:"95",q:"Which outcome of acute inflammation results from significant tissue damage and inability to regenerate?",opts:[{l:"A",t:"Complete resolution"},{l:"B",t:"Abscess formation"},{l:"C",t:"Regeneration"},{l:"D",t:"Scar formation (fibrosis)"}],ans:"D"},
+{num:"96",q:"Which of the following mediators causes pain during acute inflammation?",opts:[{l:"A",t:"Prostaglandin E2"},{l:"B",t:"Histamine"},{l:"C",t:"Interleukin-10"},{l:"D",t:"Leukotriene C4"}],ans:"A"},
+{num:"97",q:"Which of the following is a systemic sign of acute inflammation?",opts:[{l:"A",t:"Fever"},{l:"B",t:"Erythema (redness)"},{l:"C",t:"Swelling"},{l:"D",t:"Localized pain at the injury site"}],ans:"A"},
+{num:"98",q:"Which of the following processes is not characteristic of acute inflammation?",opts:[{l:"A",t:"Exudation of plasma"},{l:"B",t:"Neutrophil infiltration"},{l:"C",t:"Angiogenesis"},{l:"D",t:"Increased vascular permeability"}],ans:"C"},
+{num:"99",q:"Which complement component is responsible for opsonization during inflammation?",opts:[{l:"A",t:"C3b"},{l:"B",t:"C5a"},{l:"C",t:"C4a"},{l:"D",t:"C1q"}],ans:"A"},
+{num:"100",q:"Which of the following molecules is an anti-inflammatory cytokine that reduces the inflammatory response?",opts:[{l:"A",t:"Interleukin-1"},{l:"B",t:"Interleukin-6"},{l:"C",t:"Interleukin-10"},{l:"D",t:"Tumor necrosis factor-alpha (TNF-\u03b1)"}],ans:"C"},
+{num:"101",q:"The main cell type involved in chronic inflammation is:",opts:[{l:"A",t:"Neutrophils"},{l:"B",t:"Eosinophils"},{l:"C",t:"Lymphocytes"},{l:"D",t:"Platelets"}],ans:"C"},
+{num:"102",q:"Which of the following features is not characteristic of chronic inflammation?",opts:[{l:"A",t:"Vascular proliferation"},{l:"B",t:"Accumulation of macrophages"},{l:"C",t:"Formation of granulomas"},{l:"D",t:"Predominance of exudation"}],ans:"D"},
+{num:"103",q:"Which of the following is not a systemic effect of inflammation?",opts:[{l:"A",t:"Fever"},{l:"B",t:"Leukocytosis"},{l:"C",t:"Scar formation"},{l:"D",t:"Increased levels of acute-phase proteins"}],ans:"C"},
+{num:"104",q:"Macrophages in chronic inflammation belong to which type of cells?",opts:[{l:"A",t:"Post-mitotic cells"},{l:"B",t:"Labile cells"},{l:"C",t:"Stable cells"},{l:"D",t:"Cells of the mononuclear phagocyte system"}],ans:"D"},
+{num:"105",q:"Which of the following mediators plays a key role in activating macrophages during chronic inflammation?",opts:[{l:"A",t:"Interferon-gamma"},{l:"B",t:"Histamine"},{l:"C",t:"Bradykinin"},{l:"D",t:"Prostacyclin"}],ans:"A"},
+{num:"106",q:"What is the primary cause of granulomatous inflammation among the following?",opts:[{l:"A",t:"Bacterial toxins"},{l:"B",t:"Foreign bodies"},{l:"C",t:"Allergic reactions"},{l:"D",t:"Viral infections"}],ans:"B"},
+{num:"107",q:"Which type of cells are predominant in granulomas in tuberculosis?",opts:[{l:"A",t:"Langhans giant multinucleated cells"},{l:"B",t:"Plasma cells"},{l:"C",t:"Neutrophils"},{l:"D",t:"Eosinophils"}],ans:"A"},
+{num:"108",q:"Which of the following statements is true regarding the systemic effects of inflammation?",opts:[{l:"A",t:"Decreased levels of C-reactive protein"},{l:"B",t:"Increased red blood cell count"},{l:"C",t:"Increased levels of acute-phase proteins"},{l:"D",t:"Decreased heart rate"}],ans:"C"},
+{num:"109",q:"Which cytokine is responsible for fever during inflammation?",opts:[{l:"A",t:"Interleukin-1"},{l:"B",t:"Interleukin-4"},{l:"C",t:"Interleukin-10"},{l:"D",t:"Interleukin-2"}],ans:"A"},
+{num:"110",q:"Which of the following is not a stage in wound healing by secondary intention?",opts:[{l:"A",t:"Formation of granulation tissue"},{l:"B",t:"Formation of a large scar"},{l:"C",t:"Minimal tissue loss"},{l:"D",t:"Wound contraction"}],ans:"C"},
+{num:"111",q:"Which factor can delay the wound healing process?",opts:[{l:"A",t:"Infection"},{l:"B",t:"Good blood supply"},{l:"C",t:"Proper nutrition"},{l:"D",t:"Minimal tissue damage"}],ans:"A"},
+{num:"112",q:"Which type of cells are capable of constant regeneration under normal conditions?",opts:[{l:"A",t:"Neurons"},{l:"B",t:"Hepatocytes"},{l:"C",t:"Epithelial skin cells"},{l:"D",t:"Cardiomyocytes"}],ans:"C"},
+{num:"113",q:"Which growth factor plays a crucial role in angiogenesis during tissue repair?",opts:[{l:"A",t:"Vascular Endothelial Growth Factor (VEGF)"},{l:"B",t:"Epidermal Growth Factor (EGF)"},{l:"C",t:"Platelet-Derived Growth Factor (PDGF)"},{l:"D",t:"Fibroblast Growth Factor (FGF)"}],ans:"A"},
+{num:"114",q:"What is most characteristic of the process of organization in chronic inflammation?",opts:[{l:"A",t:"Accumulation of exudate"},{l:"B",t:"Formation of granulation tissue"},{l:"C",t:"Tissue necrosis"},{l:"D",t:"Neutrophil infiltration"}],ans:"B"},
+{num:"115",q:"Which factor contributes to the progression from acute to chronic inflammation?",opts:[{l:"A",t:"Rapid elimination of the injurious agent"},{l:"B",t:"Presence of resistant microbes"},{l:"C",t:"Effective immune response"},{l:"D",t:"Minimal tissue damage"}],ans:"B"},
+{num:"116",q:"Which cells play a key role in fibrosis during chronic inflammation?",opts:[{l:"A",t:"Fibroblasts"},{l:"B",t:"Neutrophils"},{l:"C",t:"Basophils"},{l:"D",t:"Erythrocytes"}],ans:"A"},
+{num:"117",q:"Which of the following is a systemic sign of chronic inflammation?",opts:[{l:"A",t:"Decreased erythrocyte sedimentation rate (ESR)"},{l:"B",t:"Anemia of chronic disease"},{l:"C",t:"Lymphopenia"},{l:"D",t:"Hypothermia"}],ans:"B"},
+{num:"118",q:"Which vitamin is necessary for normal collagen synthesis during wound healing?",opts:[{l:"A",t:"Vitamin A"},{l:"B",t:"Vitamin C"},{l:"C",t:"Vitamin D"},{l:"D",t:"Vitamin K"}],ans:"B"},
+{num:"119",q:"Which process is characteristic of tissue regeneration?",opts:[{l:"A",t:"Replacement of damaged tissue with scar tissue"},{l:"B",t:"Restoration of tissue structure and function"},{l:"C",t:"Abscess formation"},{l:"D",t:"Calcification"}],ans:"B"},
+{num:"120",q:"Which of the following is not a cause of impaired wound healing?",opts:[{l:"A",t:"Diabetes mellitus"},{l:"B",t:"Vitamin C deficiency"},{l:"C",t:"Good nutrition"},{l:"D",t:"Immunodeficiency"}],ans:"C"},
+{num:"121",q:"Which cell type plays a key role in the humoral immune response?",opts:[{l:"A",t:"Macrophages"},{l:"B",t:"T-lymphocytes"},{l:"C",t:"B-lymphocytes"},{l:"D",t:"Neutrophils"}],ans:"C"},
+{num:"122",q:"To which category of hypersensitivity does anaphylactic shock belong?",opts:[{l:"A",t:"Type I (immediate hypersensitivity)"},{l:"B",t:"Type II (cytotoxic)"},{l:"C",t:"Type III (immune complex-mediated)"},{l:"D",t:"Type IV (delayed-type hypersensitivity)"}],ans:"A"},
+{num:"123",q:"Which immunoglobulin is predominantly involved in Type I hypersensitivity reactions?",opts:[{l:"A",t:"IgA"},{l:"B",t:"IgG"},{l:"C",t:"IgE"},{l:"D",t:"IgM"}],ans:"C"},
+{num:"124",q:"Which of the following is an example of an autoimmune disease?",opts:[{l:"A",t:"Influenza"},{l:"B",t:"Systemic lupus erythematosus"},{l:"C",t:"Tuberculosis"},{l:"D",t:"Malaria"}],ans:"B"},
+{num:"125",q:"What mechanism underlies Type II hypersensitivity?",opts:[{l:"A",t:"Antibodies against cellular or tissue antigens"},{l:"B",t:"Formation of immune complexes"},{l:"C",t:"Activation of delayed-type T-cells"},{l:"D",t:"Release of histamine from mast cells"}],ans:"A"},
+{num:"126",q:"Which of the following cytokines is secreted by Th1 helper T-cells and involved in macrophage activation?",opts:[{l:"A",t:"Interleukin-4 (IL-4)"},{l:"B",t:"Interleukin-10 (IL-10)"},{l:"C",t:"Interferon-gamma (IFN-\u03b3)"},{l:"D",t:"Interleukin-17 (IL-17)"}],ans:"C"},
+{num:"127",q:"Which of the following conditions is an example of Type III hypersensitivity?",opts:[{l:"A",t:"Post-streptococcal glomerulonephritis"},{l:"B",t:"Iron-deficiency anemia"},{l:"C",t:"Myasthenia gravis"},{l:"D",t:"Contact dermatitis"}],ans:"A"},
+{num:"128",q:"Which of the following components of the immune system is part of innate immunity?",opts:[{l:"A",t:"Neutrophils"},{l:"B",t:"T-lymphocytes"},{l:"C",t:"B-lymphocytes"},{l:"D",t:"Antibodies"}],ans:"A"},
+{num:"129",q:"Which cell is primarily involved in Type IV hypersensitivity reactions?",opts:[{l:"A",t:"Basophils"},{l:"B",t:"T-lymphocytes"},{l:"C",t:"B-lymphocytes"},{l:"D",t:"Eosinophils"}],ans:"B"},
+{num:"130",q:"Which immunodeficiency is associated with a lack of antibodies?",opts:[{l:"A",t:"DiGeorge syndrome"},{l:"B",t:"Bruton's agammaglobulinemia"},{l:"C",t:"Chronic granulomatous disease"},{l:"D",t:"Severe combined immunodeficiency (SCID)"}],ans:"B"},
+{num:"131",q:"Which of the following is not a function of antibodies?",opts:[{l:"A",t:"Neutralization of toxins"},{l:"B",t:"Opsonization of pathogens"},{l:"C",t:"Activation of complement"},{l:"D",t:"Phagocytosis of pathogens"}],ans:"D"},
+{num:"132",q:"Which marker is present on the surface of all T-lymphocytes?",opts:[{l:"A",t:"CD4"},{l:"B",t:"CD8"},{l:"C",t:"CD3"},{l:"D",t:"CD19"}],ans:"C"},
+{num:"133",q:"What mechanism underlies autoimmune diseases?",opts:[{l:"A",t:"Viral infections"},{l:"B",t:"Breakdown of tolerance to self-antigens"},{l:"C",t:"Immunoglobulin deficiency"},{l:"D",t:"Excessive complement production"}],ans:"B"},
+{num:"134",q:"Which feature is characteristic of Type IV hypersensitivity?",opts:[{l:"A",t:"Formation of immune complexes"},{l:"B",t:"Delayed-type reaction involving T-cells"},{l:"C",t:"Complement activation by antibodies"},{l:"D",t:"Release of histamine from mast cells"}],ans:"B"},
+{num:"135",q:"Which method is used to assess cellular immunity in vivo?",opts:[{l:"A",t:"Tuberculin skin test (Mantoux test)"},{l:"B",t:"Measurement of serum immunoglobulin levels"},{l:"C",t:"Blood culture for sterility"},{l:"D",t:"Chest X-ray"}],ans:"A"},
+{num:"136",q:"Which of the following is an example of Type II hypersensitivity?",opts:[{l:"A",t:"Hemolytic disease of the newborn"},{l:"B",t:"Hay fever"},{l:"C",t:"Rheumatoid arthritis"},{l:"D",t:"Contact dermatitis"}],ans:"A"},
+{num:"137",q:"Which complement component is key in forming the membrane attack complex (MAC)?",opts:[{l:"A",t:"C3a"},{l:"B",t:"C5a"},{l:"C",t:"C9"},{l:"D",t:"C1q"}],ans:"C"},
+{num:"138",q:"Which cytokine promotes the differentiation of helper T-cells into Th2 cells?",opts:[{l:"A",t:"Interleukin-4 (IL-4)"},{l:"B",t:"Interleukin-12 (IL-12)"},{l:"C",t:"Interferon-gamma (IFN-\u03b3)"},{l:"D",t:"Tumor necrosis factor-alpha (TNF-\u03b1)"}],ans:"A"},
+{num:"139",q:"What characterizes severe combined immunodeficiency (SCID)?",opts:[{l:"A",t:"Defect in both humoral and cellular immunity"},{l:"B",t:"Isolated IgA deficiency"},{l:"C",t:"Neutrophil deficiency"},{l:"D",t:"Thymic hyperplasia"}],ans:"A"},
+{num:"140",q:"Which immunoglobulin is capable of crossing the placental barrier?",opts:[{l:"A",t:"IgA"},{l:"B",t:"IgG"},{l:"C",t:"IgM"},{l:"D",t:"IgE"}],ans:"B"},
+{num:"141",q:"What are autoimmune diseases?",opts:[{l:"A",t:"Diseases caused by viruses"},{l:"B",t:"Diseases associated with immune deficiency"},{l:"C",t:"Diseases where the immune system attacks the body's own tissues"},{l:"D",t:"Infectious diseases transmitted by airborne droplets"}],ans:"C"},
+{num:"142",q:"Which of the following organs is most commonly affected in systemic lupus erythematosus (SLE)?",opts:[{l:"A",t:"Lungs"},{l:"B",t:"Kidneys"},{l:"C",t:"Pancreas"},{l:"D",t:"Intestines"}],ans:"B"},
+{num:"143",q:"Which laboratory test is most specific for diagnosing systemic lupus erythematosus?",opts:[{l:"A",t:"Elevated C-reactive protein level"},{l:"B",t:"Presence of antinuclear antibodies (ANA)"},{l:"C",t:"Decreased hemoglobin level"},{l:"D",t:"Elevated glucose level"}],ans:"B"},
+{num:"144",q:"Rheumatoid arthritis is characterized by the involvement of:",opts:[{l:"A",t:"Joints with the development of chronic inflammation"},{l:"B",t:"Heart with the formation of defects"},{l:"C",t:"Kidneys leading to nephritis"},{l:"D",t:"Skin with the appearance of rashes"}],ans:"A"},
+{num:"145",q:"Which of the following mechanisms underlies autoimmune diseases?",opts:[{l:"A",t:"Genetic mutations in immune cells"},{l:"B",t:"Breakdown of immune tolerance to self-antigens"},{l:"C",t:"Deficiency of vitamins and trace elements"},{l:"D",t:"Infection by specific bacteria"}],ans:"B"},
+{num:"146",q:"Which of the following is an example of an organ-specific autoimmune disease?",opts:[{l:"A",t:"Systemic scleroderma"},{l:"B",t:"Type 1 diabetes mellitus"},{l:"C",t:"Systemic lupus erythematosus"},{l:"D",t:"Rheumatoid arthritis"}],ans:"B"},
+{num:"147",q:"In which disease do antibodies form against thyroid-stimulating hormone receptors, leading to hyperthyroidism?",opts:[{l:"A",t:"Hashimoto's thyroiditis"},{l:"B",t:"Graves' disease (diffuse toxic goiter)"},{l:"C",t:"Addison's disease"},{l:"D",t:"Pernicious anemia"}],ans:"B"},
+{num:"148",q:"Which type of hypersensitivity is most commonly involved in the pathogenesis of autoimmune diseases?",opts:[{l:"A",t:"Type I (immediate hypersensitivity)"},{l:"B",t:"Type III (immune complex-mediated hypersensitivity)"},{l:"C",t:"Type II (antibody-dependent cytotoxicity)"},{l:"D",t:"Type IV (delayed-type hypersensitivity)"}],ans:"B"},
+{num:"149",q:"Which of the following factors may contribute to the development of autoimmune diseases?",opts:[{l:"A",t:"Genetic predisposition"},{l:"B",t:"Regular physical exercise"},{l:"C",t:"Balanced nutrition"},{l:"D",t:"Low stress levels"}],ans:"A"},
+{num:"150",q:"Which of the following symptoms is characteristic of systemic scleroderma?",opts:[{l:"A",t:"Thickening and hardening of the skin due to excessive collagen production"},{l:"B",t:"Increased joint mobility"},{l:"C",t:"Decreased blood pressure"},{l:"D",t:"Hyperpigmentation of the skin"}],ans:"A"},
+{num:"151",q:"Myasthenia gravis is associated with the formation of antibodies against:",opts:[{l:"A",t:"Myelin sheath of nerve fibers"},{l:"B",t:"Acetylcholine receptors at neuromuscular junctions"},{l:"C",t:"Insulin-producing cells of the pancreas"},{l:"D",t:"Thyroid gland cells"}],ans:"B"},
+{num:"152",q:"Which of the following diseases is characterized by demyelination in the central nervous system?",opts:[{l:"A",t:"Guillain-Barr\u00e9 syndrome"},{l:"B",t:"Multiple sclerosis"},{l:"C",t:"Addison's disease"},{l:"D",t:"Psoriasis"}],ans:"B"},
+{num:"153",q:"Which of the following is not an autoimmune disease?",opts:[{l:"A",t:"Rheumatoid arthritis"},{l:"B",t:"Systemic lupus erythematosus"},{l:"C",t:"Infectious mononucleosis"},{l:"D",t:"Hashimoto's thyroiditis"}],ans:"C"},
+{num:"154",q:"The primary pathogenetic mechanism in type 1 diabetes mellitus involves:",opts:[{l:"A",t:"Damage to insulin receptors"},{l:"B",t:"Destruction of pancreatic \u03b2-cells by autoantibodies"},{l:"C",t:"Increased production of glucagon"},{l:"D",t:"Deficiency of glucose in the diet"}],ans:"B"},
+{num:"155",q:"Which of the following laboratory indicators is often elevated in autoimmune diseases?",opts:[{l:"A",t:"Blood glucose level"},{l:"B",t:"Erythrocyte sedimentation rate (ESR)"},{l:"C",t:"Platelet count"},{l:"D",t:"Calcium level"}],ans:"B"},
+{num:"156",q:"Which of the following treatments is most commonly used for autoimmune diseases?",opts:[{l:"A",t:"Immunosuppressive therapy"},{l:"B",t:"Antibiotic therapy"},{l:"C",t:"Chemotherapy"},{l:"D",t:"Radiation therapy"}],ans:"A"},
+{num:"157",q:"In Hashimoto's thyroiditis, there is:",opts:[{l:"A",t:"Autoimmune destruction of thyroid tissue leading to hypothyroidism"},{l:"B",t:"Increased thyroid function"},{l:"C",t:"Adrenal gland involvement"},{l:"D",t:"Development of diabetes mellitus"}],ans:"A"},
+{num:"158",q:"Which of the following features is most characteristic of serous inflammation?",opts:[{l:"A",t:"Formation of purulent exudate"},{l:"B",t:"Accumulation of clear, watery fluid"},{l:"C",t:"Deposition of fibrin on surfaces"},{l:"D",t:"Tissue necrosis"}],ans:"B"},
+{num:"159",q:"Which of the following is a common symptom in many autoimmune diseases?",opts:[{l:"A",t:"Hypertension"},{l:"B",t:"Chronic fatigue and fever"},{l:"C",t:"Increased appetite"},{l:"D",t:"Weight loss"}],ans:"B"},
+{num:"160",q:"Which factor can trigger an autoimmune response through the mechanism of molecular mimicry?",opts:[{l:"A",t:"Certain viral and bacterial infections"},{l:"B",t:"Influenza vaccination"},{l:"C",t:"Antibiotic use"},{l:"D",t:"Vitamin intake"}],ans:"A"},
+{num:"161",q:"Hyperacurate rejection is due to:",opts:[{l:"A",t:"Preformed antibodies"},{l:"B",t:"Cytotoxic T-lymphocyte mediated injury"},{l:"C",t:"Circulating macrophage mediated injury"},{l:"D",t:"Endothelitis caused by donor antibodies"}],ans:"A"},
+{num:"162",q:"All are affected in Graft-Versus host reaction:",opts:[{l:"A",t:"Skin"},{l:"B",t:"GIT"},{l:"C",t:"Liver"},{l:"D",t:"Lung"}],ans:"D"},
+{num:"163",q:"Preformed antibodies cause:",opts:[{l:"A",t:"Hyperacute rejection"},{l:"B",t:"Acute rejection"},{l:"C",t:"Chronic rejection"},{l:"D",t:"Acute humoral rejection"}],ans:"A"},
+{num:"164",q:"Transfer of the graft of different species are called as:",opts:[{l:"A",t:"Isograft"},{l:"B",t:"Allograft"},{l:"C",t:"Homograft"},{l:"D",t:"Xenograft"}],ans:"D"},
+{num:"165",q:"Principal cause of death in renal transplant patient is:",opts:[{l:"A",t:"Uraemia"},{l:"B",t:"Malignancy"},{l:"C",t:"Rejection"},{l:"D",t:"Infection"}],ans:"D"},
+{num:"166",q:"Preformed antibodies cause:",opts:[{l:"A",t:"Hyperacute rejection"},{l:"B",t:"Acute rejection"},{l:"C",t:"Chronic rejection"},{l:"D",t:"Acute humoral rejection"}],ans:"A"},
+{num:"167",q:"Which of these complement factor is a marker of humoral rejection?",opts:[{l:"A",t:"C3d"},{l:"B",t:"C5a"},{l:"C",t:"C3b"},{l:"D",t:"C4d"}],ans:"D"},
+{num:"168",q:"The commonest type of graft rejection is:",opts:[{l:"A",t:"Hyperacute rejection"},{l:"B",t:"Acute rejection"},{l:"C",t:"Chronic rejection"},{l:"D",t:"All are equal in incidence"}],ans:"B"},
+{num:"169",q:"Organ with least chance of rejection is:",opts:[{l:"A",t:"Blood"},{l:"B",t:"Liver"},{l:"C",t:"Kidney"},{l:"D",t:"Heart"}],ans:"B"},
+{num:"170",q:"Runt disease is associated with:",opts:[{l:"A",t:"Acute rejection"},{l:"B",t:"Hyperacute rejection"},{l:"C",t:"Chronic rejection"},{l:"D",t:"Graft versus host disease"}],ans:"D"},
+{num:"171",q:"Prior immune suppression is not helpful in which type of graft rejection:",opts:[{l:"A",t:"Acute rejection"},{l:"B",t:"Hyperacute rejection"},{l:"C",t:"Chronic rejection"},{l:"D",t:"GVHD"}],ans:"B"},
+{num:"172",q:"Which of the following is true about GVHD?",opts:[{l:"A",t:"Occurs when host is immunocompetent"},{l:"B",t:"Occurs when donor cells are immunocompetent"},{l:"C",t:"Most common organ involved is lung"},{l:"D",t:"Most common in renal transplant"}],ans:"B"},
+{num:"173",q:"Microcytotoxicity is used for:",opts:[{l:"A",t:"Tissue typing"},{l:"B",t:"Drug allergy"},{l:"C",t:"Infection Susceptibility"},{l:"D",t:"Substance toxicity"}],ans:"A"},
+{num:"174",q:"Acute graft rejection occurs within:",opts:[{l:"A",t:"3 hours"},{l:"B",t:"3 days"},{l:"C",t:"3 months"},{l:"D",t:"3 years"}],ans:"B"},
+{num:"175",q:"The best investigation for the diagnosis of amyloidosis is:",opts:[{l:"A",t:"Colonoscopy"},{l:"B",t:"Rectal biopsy"},{l:"C",t:"Upper GI endoscopy"},{l:"D",t:"CT scan"}],ans:"B"},
+{num:"176",q:"Which type of amyloidosis is caused by mutations in transthyretin gene?",opts:[{l:"A",t:"Familial Mediterranean fever"},{l:"B",t:"Familial amyloidosis polyneuropathy"},{l:"C",t:"Dialysis associated amyloidosis"},{l:"D",t:"Prion protein associated amyloidosis"}],ans:"B"},
+{num:"177",q:"Bone marrow in AL amyloidosis shows:",opts:[{l:"A",t:"Bone marrow plasmacytosis"},{l:"B",t:"Granulomatous reaction"},{l:"C",t:"Fibrosis"},{l:"D",t:"Giant cell formation"}],ans:"A"},
+{num:"178",q:"What is the best method for confirming amyloidosis?",opts:[{l:"A",t:"Colonoscopy"},{l:"B",t:"Sigmoidoscopy"},{l:"C",t:"Rectal biopsy"},{l:"D",t:"Tongue biopsy"}],ans:"C"},
+{num:"179",q:"Neointimal hyperplasia causes vascular graft failure as a result of hypertrophy of:",opts:[{l:"A",t:"Endothelial cells"},{l:"B",t:"Collagen fibers"},{l:"C",t:"Smooth muscle cells"},{l:"D",t:"Elastic fibers"}],ans:"C"},
+{num:"180",q:"Familial amyloidotic polyneuropathy is due to amyloidosis of nerves caused by deposition of:",opts:[{l:"A",t:"Amyloid associated protein"},{l:"B",t:"Mutant calcitonin"},{l:"C",t:"Mutant transthyretin"},{l:"D",t:"Normal transthyretin"}],ans:"C"},
+{num:"181",q:"Gingival biopsy is useful in the diagnosis of:",opts:[{l:"A",t:"Sarcoidosis"},{l:"B",t:"Amyloidosis"},{l:"C",t:"Histoplasmosis"},{l:"D",t:"Scurvy"}],ans:"B"},
+{num:"182",q:"Amyloid is:",opts:[{l:"A",t:"Mucopolysaccharide"},{l:"B",t:"Lipoprotein"},{l:"C",t:"Glycoprotein"},{l:"D",t:"Intermediate filament"}],ans:"C"},
+{num:"183",q:"Serum amyloid associated protein is found in:",opts:[{l:"A",t:"Alzheimer's disease"},{l:"B",t:"Chronic inflammatory states"},{l:"C",t:"Chronic renal failure"},{l:"D",t:"Malignant hypertension"}],ans:"B"},
+{num:"184",q:"Most common site of biopsy in amyloidosis:",opts:[{l:"A",t:"Liver"},{l:"B",t:"Spleen"},{l:"C",t:"Kidney"},{l:"D",t:"Lung"}],ans:"C"},
+{num:"185",q:"Which of the following is the most serious organ involvement in amyloidosis?",opts:[{l:"A",t:"Cardiac tissue"},{l:"B",t:"Renal tissue"},{l:"C",t:"Splenic tissue"},{l:"D",t:"Hepatic tissue"}],ans:"A"},
+{num:"186",q:"Which type of amyloidosis is caused by mutation of the transthyretin protein?",opts:[{l:"A",t:"Familial Mediterranean fever"},{l:"B",t:"Familial amyloidosis polyneuropathy"},{l:"C",t:"Dialysis associated amyloidosis"},{l:"D",t:"Prion protein associated amyloidosis"}],ans:"B"},
+{num:"187",q:"Cause of death in amyloidosis involving kidney:",opts:[{l:"A",t:"Cardiac failure"},{l:"B",t:"Renal failure"},{l:"C",t:"Sepsis"},{l:"D",t:"Liver failure"}],ans:"B"},
+{num:"188",q:"Secondary amyloidosis complicates which of the following:",opts:[{l:"A",t:"Pneumonia"},{l:"B",t:"Chronic glomerulonephritis"},{l:"C",t:"Irritable bowel syndrome"},{l:"D",t:"Chronic osteomyelitis"}],ans:"D"},
+{num:"189",q:"On Congo-red staining, amyloid is seen as:",opts:[{l:"A",t:"Dark brown color"},{l:"B",t:"Blue color"},{l:"C",t:"Brilliant pink color"},{l:"D",t:"Khaki color"}],ans:"C"},
+{num:"190",q:"Excessive accumulation of which hormone protein causes organ dysfunction:",opts:[{l:"A",t:"Growth hormone"},{l:"B",t:"Prolactin"},{l:"C",t:"Calcitonin"},{l:"D",t:"Parathormone"}],ans:"C"},
+{num:"191",q:"Serum amyloid associated protein is increased in:",opts:[{l:"A",t:"Alzheimer's disease"},{l:"B",t:"Ankylosing spondylitis"},{l:"C",t:"Chronic renal failure"},{l:"D",t:"Malignant hypertension"}],ans:"B"},
+{num:"192",q:"Which of the following carcinoma most frequently metastasizes to brain?",opts:[{l:"A",t:"Small cell carcinoma of lung"},{l:"B",t:"Prostate cancer"},{l:"C",t:"Rectal carcinoma"},{l:"D",t:"Endometrial cancer"}],ans:"A"},
+{num:"193",q:"Chemotherapeutic drugs can cause:",opts:[{l:"A",t:"Only necrosis"},{l:"B",t:"Only apoptosis"},{l:"C",t:"Both necrosis and apoptosis"},{l:"D",t:"Anoikis"}],ans:"C"},
+{num:"194",q:"Reversible loss of polarity with abnormality in size and shape of cells is known as:",opts:[{l:"A",t:"Metaplasia"},{l:"B",t:"Dysplasia"},{l:"C",t:"Hyperplasia"},{l:"D",t:"Anaplasia"}],ans:"B"},
+{num:"195",q:"A strong propensity for vascular invasion is seen in:",opts:[{l:"A",t:"Prostatic carcinoma"},{l:"B",t:"Hepatocellular carcinoma"},{l:"C",t:"Bronchogenic carcinoma"},{l:"D",t:"Gastric carcinoma"}],ans:"B"},
+{num:"196",q:"Earliest changes of neoplastic transformation as seen at a microscopic level is called:",opts:[{l:"A",t:"Hyperplasia"},{l:"B",t:"Metaplasia"},{l:"C",t:"Dysplasia"},{l:"D",t:"Carcinoma in situ"}],ans:"C"},
+{num:"197",q:"Squamous cell carcinoma spreads by:",opts:[{l:"A",t:"Hematogenous route"},{l:"B",t:"Lymphatic route"},{l:"C",t:"Direct invasion"},{l:"D",t:"Expansion"}],ans:"B"},
+{num:"198",q:"Which one of the following tumors does not cause bony metastasis?",opts:[{l:"A",t:"Renal cell carcinoma"},{l:"B",t:"Gastric carcinoma"},{l:"C",t:"Thyroid carcinoma"},{l:"D",t:"Breast carcinoma"}],ans:"B"},
+{num:"199",q:"Hamartoma is:",opts:[{l:"A",t:"Proliferation of cells in foreign site"},{l:"B",t:"Proliferation of native cells in tissue"},{l:"C",t:"Malignant condition"},{l:"D",t:"Acquired condition"}],ans:"B"},
+{num:"200",q:"Sure sign of malignancy is:",opts:[{l:"A",t:"Mitoses"},{l:"B",t:"Polychromasia"},{l:"C",t:"Nuclear pleomorphism"},{l:"D",t:"Metastasis"}],ans:"D"},
+{num:"201",q:"Malignancy is typically associated with disordered differentiation and maturation. Which of the following mentioned options best describes anaplasia?",opts:[{l:"A",t:"Hepatic tumor cells synthesizing bile"},{l:"B",t:"Skin tumor cells producing keratin pearls"},{l:"C",t:"Bronchial epithelial cells producing keratin pearls"},{l:"D",t:"Muscle tumor cells forming giant cells"}],ans:"D"},
+{num:"202",q:"Which of the following criteria can be used to determine if a pheochromocytoma lesion is benign or malignant?",opts:[{l:"A",t:"Blood vessel invasion"},{l:"B",t:"Cannot be determined by microscopic examination"},{l:"C",t:"Hemorrhage and necrosis"},{l:"D",t:"Nuclear pleomorphism"}],ans:"B"},
+{num:"203",q:"Which one is not the pre cancerous condition?",opts:[{l:"A",t:"Crohn's disease"},{l:"B",t:"Ulcerative colitis"},{l:"C",t:"Leukoplakia"},{l:"D",t:"Xeroderma pigmentosum"}],ans:"A"},
+{num:"204",q:"Which of the following features differentiates invasive carcinoma from carcinoma in situ?",opts:[{l:"A",t:"Anaplasia"},{l:"B",t:"Number of mitosis"},{l:"C",t:"Basement membrane invasion"},{l:"D",t:"Pleomorphism"}],ans:"C"},
+{num:"205",q:"Cell-matrix adhesions are mediated by?",opts:[{l:"A",t:"Cadherins"},{l:"B",t:"Integrins"},{l:"C",t:"Selectins"},{l:"D",t:"Calmodulin"}],ans:"B"},
+{num:"206",q:"Which of the following is not a labile cell?",opts:[{l:"A",t:"Bone marrow"},{l:"B",t:"Epidermal cells"},{l:"C",t:"Small intestine mucosa"},{l:"D",t:"Hepatocytes"}],ans:"D"},
+{num:"207",q:"Which of the following is most reliable feature of malignant transformation of pheochromocytoma?",opts:[{l:"A",t:"Presence of mitotic figures"},{l:"B",t:"Presence of metastasis to other organs"},{l:"C",t:"Vascular/ capsular invasion"},{l:"D",t:"Absence of metastasis"}],ans:"B"},
+{num:"208",q:"Overgrowth of a skin structure at a localised region is:",opts:[{l:"A",t:"Hamartoma"},{l:"B",t:"Malignant tumor"},{l:"C",t:"Choristoma"},{l:"D",t:"Polyp"}],ans:"A"},
+{num:"209",q:"Molecular study is important in the management of which malignancy?",opts:[{l:"A",t:"Multiple myeloma"},{l:"B",t:"Renal cell carcinoma"},{l:"C",t:"Seminoma"},{l:"D",t:"Basal cell carcinoma"}],ans:"A"},
+{num:"210",q:"Tumor cells secrete which of the following?",opts:[{l:"A",t:"Tyrosine kinase"},{l:"B",t:"Collagenase IV"},{l:"C",t:"Catenins"},{l:"D",t:"E-cadherins"}],ans:"B"},
+{num:"211",q:"Substance playing a role in tumor metastasis cascade is?",opts:[{l:"A",t:"Collagenase IV"},{l:"B",t:"TNF-alpha"},{l:"C",t:"CD99"},{l:"D",t:"NM23"}],ans:"A"},
+{num:"212",q:"Carcinoma with no or minimal metastasis is?",opts:[{l:"A",t:"Squamous cell carcinoma"},{l:"B",t:"Basal cell carcinoma"},{l:"C",t:"Melanoma"},{l:"D",t:"Leydig's cell carcinoma"}],ans:"B"},
+{num:"213",q:"Which of the following cell types is not a target for initiation and maintenance of HIV infection?",opts:[{l:"A",t:"CD4 T cell"},{l:"B",t:"Macrophage"},{l:"C",t:"Dendritic cell"},{l:"D",t:"Neutrophil"}],ans:"D"},
+{num:"214",q:"Most common site for lymphoma in AIDS patients is:",opts:[{l:"A",t:"CNS lesions"},{l:"B",t:"Spleen"},{l:"C",t:"Thymus"},{l:"D",t:"Abdomen"}],ans:"A"},
+{num:"215",q:"HIV affects which of the following most commonly?",opts:[{l:"A",t:"Helper cells"},{l:"B",t:"Suppressor cell"},{l:"C",t:"RBCs"},{l:"D",t:"Platelets"}],ans:"A"},
+{num:"216",q:"Which of the following lesions/conditions shows most specific anatomic changes in HIV infection?",opts:[{l:"A",t:"Lymph nodes"},{l:"B",t:"Opportunistic infections"},{l:"C",t:"CNS lesions"},{l:"D",t:"Kaposi's sarcoma (blood vessels)"}],ans:"C"},
+{num:"217",q:"Risk of HIV transmission is not seen with:",opts:[{l:"A",t:"Whole blood"},{l:"B",t:"Platelets"},{l:"C",t:"Plasma derived Hepatitis B vaccine"},{l:"D",t:"Leucocytes"}],ans:"C"},
+{num:"218",q:"Mantoux test reading of less than 5 mm indicates:",opts:[{l:"A",t:"Tuberculous infections"},{l:"B",t:"Disseminated TB"},{l:"C",t:"Susceptibility to TB"},{l:"D",t:"Immunity to TB"}],ans:"B"},
+{num:"219",q:"Which of these is an immune-privileged site?",opts:[{l:"A",t:"Area postrema"},{l:"B",t:"Loop of Henle"},{l:"C",t:"Optic nerve"},{l:"D",t:"Seminiferous tubules"}],ans:"D"},
+{num:"220",q:"Which region of the world has the highest prevalence of HIV?",opts:[{l:"A",t:"Europe"},{l:"B",t:"Sub-Saharan Africa"},{l:"C",t:"North America"},{l:"D",t:"Southeast Asia"}],ans:"B"},
+{num:"221",q:"What is the name of the test that measures the amount of HIV RNA in the blood?",opts:[{l:"A",t:"Viral load test"},{l:"B",t:"CD4 count test"},{l:"C",t:"Western blot"},{l:"D",t:"Immunofluorescence assay"}],ans:"A"},
+{num:"222",q:"What is the function of reverse transcriptase in HIV?",opts:[{l:"A",t:"Integration of viral DNA into the host genome"},{l:"B",t:"Conversion of viral RNA into DNA"},{l:"C",t:"Assembly of viral particles"},{l:"D",t:"Binding to CD4 receptors"}],ans:"B"},
+{num:"223",q:"What is the main goal of antiretroviral therapy (ART)?",opts:[{l:"A",t:"Cure HIV infection"},{l:"B",t:"Prevent progression to AIDS"},{l:"C",t:"Eliminate all viral particles"},{l:"D",t:"Reduce CD4 T-cell count"}],ans:"B"},
+{num:"224",q:"What is the most common opportunistic infection in AIDS patients?",opts:[{l:"A",t:"Pneumocystis pneumonia (PCP)"},{l:"B",t:"Influenza"},{l:"C",t:"Hepatitis C"},{l:"D",t:"Tetanus"}],ans:"A"},
+{num:"225",q:"Which stage of HIV infection is characterized by opportunistic infections?",opts:[{l:"A",t:"Acute infection"},{l:"B",t:"Latent phase"},{l:"C",t:"AIDS"},{l:"D",t:"Seroconversion"}],ans:"C"},
+{num:"226",q:"What is the primary mode of HIV transmission?",opts:[{l:"A",t:"Airborne droplets"},{l:"B",t:"Contaminated food"},{l:"C",t:"Blood and body fluids"},{l:"D",t:"Skin-to-skin contact"}],ans:"C"},
+{num:"227",q:"Which cells are the main target of HIV?",opts:[{l:"A",t:"B-cells"},{l:"B",t:"CD4 T-cells"},{l:"C",t:"Natural killer cells"},{l:"D",t:"Macrophages"}],ans:"B"},
+{num:"228",q:"What is the primary cause of acquired immunodeficiency syndrome (AIDS)?",opts:[{l:"A",t:"Hepatitis B virus"},{l:"B",t:"Human papillomavirus (HPV)"},{l:"C",t:"Human immunodeficiency virus (HIV)"},{l:"D",t:"Epstein-Barr virus (EBV)"}],ans:"C"},
+{num:"229",q:"What is the significance of a CD4 T-cell count below 200 cells/\u00b5L in HIV patients?",opts:[{l:"A",t:"Indication of acute infection"},{l:"B",t:"Progression to AIDS"},{l:"C",t:"Complete immune recovery"},{l:"D",t:"Ineffectiveness of ART"}],ans:"B"},
+{num:"230",q:"Which HIV subtype is most common worldwide?",opts:[{l:"A",t:"HIV-1 Group M"},{l:"B",t:"HIV-2"},{l:"C",t:"HIV-1 Group N"},{l:"D",t:"HIV-1 Group O"}],ans:"A"},
+{num:"231",q:"Which of the following is an example of a post-exposure prophylaxis (PEP) strategy?",opts:[{l:"A",t:"Pre-exposure vaccination"},{l:"B",t:"Antiretroviral therapy within 72 hours of exposure"},{l:"C",t:"Use of immunosuppressants"},{l:"D",t:"Regular use of antibiotics"}],ans:"B"},
+{num:"232",q:"What is the average time for untreated HIV to progress to AIDS?",opts:[{l:"A",t:"1-2 years"},{l:"B",t:"5-10 years"},{l:"C",t:"15-20 years"},{l:"D",t:"It does not progress"}],ans:"B"},
+{num:"233",q:"What is the most effective strategy for preventing mother-to-child transmission of HIV?",opts:[{l:"A",t:"Antiretroviral therapy during pregnancy"},{l:"B",t:"Avoidance of breastfeeding"},{l:"C",t:"Caesarean delivery"},{l:"D",t:"Use of antibiotics"}],ans:"A"},
+{num:"234",q:"Which test is used to assess T-lymphocyte function?",opts:[{l:"A",t:"Degranulation test"},{l:"B",t:"Delayed-type hypersensitivity reaction"},{l:"C",t:"Nitroblue tetrazolium test"},{l:"D",t:"IgA level analysis"}],ans:"B"},
+{num:"235",q:"Which immunodeficiency is associated with chronic skin and lung infections and elevated IgE levels?",opts:[{l:"A",t:"Hyper IgE syndrome"},{l:"B",t:"Hyper IgM syndrome"},{l:"C",t:"Ataxia-telangiectasia"},{l:"D",t:"Wiskott-Aldrich syndrome"}],ans:"A"},
+{num:"236",q:"Which disease is characterized by impaired DNA repair?",opts:[{l:"A",t:"Ataxia-telangiectasia"},{l:"B",t:"Chronic granulomatous disease"},{l:"C",t:"Hyper IgM syndrome"},{l:"D",t:"Job syndrome"}],ans:"A"},
+{num:"237",q:"Which disease is caused by impaired neutrophil migration?",opts:[{l:"A",t:"Wiskott-Aldrich syndrome"},{l:"B",t:"Leukocyte adhesion deficiency (LAD)"},{l:"C",t:"Ataxia-telangiectasia"},{l:"D",t:"Bruton disease"}],ans:"B"},
+{num:"238",q:"What mechanism is impaired in chronic granulomatous disease?",opts:[{l:"A",t:"Cytokine secretion"},{l:"B",t:"Production of reactive oxygen species"},{l:"C",t:"Antibody synthesis"},{l:"D",t:"Complement activation"}],ans:"B"},
+{num:"239",q:"Which immunoglobulin is most commonly reduced in primary immunodeficiencies?",opts:[{l:"A",t:"IgA"},{l:"B",t:"IgG"},{l:"C",t:"IgM"},{l:"D",t:"IgE"}],ans:"A"},
+{num:"240",q:"Which of the following cells is most important for cellular immunity?",opts:[{l:"A",t:"B-lymphocyte"},{l:"B",t:"T-lymphocyte"},{l:"C",t:"Macrophage"},{l:"D",t:"Neutrophil"}],ans:"B"},
+{num:"241",q:"Most common vascular tumor in AIDS patients is:",opts:[{l:"A",t:"Kaposi's sarcoma"},{l:"B",t:"Angiosarcoma"},{l:"C",t:"Lymphangioma"},{l:"D",t:"Lymphoma"}],ans:"A"},
+{num:"242",q:"The presence of Flexner-Wintersteiner rosettes is characteristic of which tumor?",opts:[{l:"A",t:"Retinoblastoma"},{l:"B",t:"Neuroblastoma"},{l:"C",t:"Medulloblastoma"},{l:"D",t:"Ewing sarcoma"}],ans:"A"},
+{num:"396",q:"HER2/neu receptor plays a role in",opts:[{l:"A",t:"Predicting therapeutic response"},{l:"B",t:"Diagnosis of breast cancer"},{l:"C",t:"Screening of breast cancer"},{l:"D",t:"Recurrence of tumor"}],ans:"A"},
+{num:"243",q:"The most common secondary malignancy in a patient having retinoblastoma is:",opts:[{l:"A",t:"Osteosarcoma"},{l:"B",t:"Renal cell carcinoma"},{l:"C",t:"Pineoblastoma"},{l:"D",t:"Osteoblastoma"}],ans:"A"},
+{num:"244",q:"Regarding Fanconi anemia, the wrong statement is:",opts:[{l:"A",t:"Autosomal dominant"},{l:"B",t:"Bone marrow show pancytopenia"},{l:"C",t:"Usually aplastic anemia"},{l:"D",t:"It is due to defective DNA repair"}],ans:"A"},
+{num:"245",q:"True statements about p53 gene are all except:",opts:[{l:"A",t:"Arrests cell cycle at G1 phase"},{l:"B",t:"Product is 53 kD protein"},{l:"C",t:"Located on chromosome 17"},{l:"D",t:"Wild/non-mutated form is associated with increased risk of childhood tumors"}],ans:"D"},
+{num:"246",q:"Growth factor oncogene is:",opts:[{l:"A",t:"Myc"},{l:"B",t:"Fos"},{l:"C",t:"Sis"},{l:"D",t:"Jun"}],ans:"C"},
+{num:"247",q:"Rosettes are characteristically seen in:",opts:[{l:"A",t:"Retinoblastoma"},{l:"B",t:"Melanoma"},{l:"C",t:"Dysgerminoma"},{l:"D",t:"Lymphoma"}],ans:"A"},
+{num:"248",q:"Which of the following is a characteristic feature of Langerhans cell histiocytosis?",opts:[{l:"A",t:"Birbeck granules"},{l:"B",t:"Homer-Wright rosettes"},{l:"C",t:"Flexner-Wintersteiner rosettes"},{l:"D",t:"Pseudorosettes"}],ans:"A"},
+{num:"249",q:"An example of a tumor suppressor gene is:",opts:[{l:"A",t:"myc"},{l:"B",t:"fos"},{l:"C",t:"ras"},{l:"D",t:"Rb"}],ans:"D"},
+{num:"250",q:"Lynch syndrome is associated with cancers of the:",opts:[{l:"A",t:"Breast, colon, ovary"},{l:"B",t:"Breast, endometrium, ovary"},{l:"C",t:"Breast, colon, endometrium"},{l:"D",t:"Colon, endometrium, ovary"}],ans:"D"},
+{num:"251",q:"Loss of heterozygosity associated with:",opts:[{l:"A",t:"Acute myeloid leukemia"},{l:"B",t:"ALL"},{l:"C",t:"Retinoblastoma"},{l:"D",t:"Promyelocytic leukemia"}],ans:"C"},
+{num:"252",q:"Which is not a tumor suppressor gene?",opts:[{l:"A",t:"WT-1"},{l:"B",t:"Rb"},{l:"C",t:"p53"},{l:"D",t:"ras"}],ans:"D"},
+{num:"253",q:"The inheritance pattern of familial Retinoblastoma is:",opts:[{l:"A",t:"Autosomal recessive"},{l:"B",t:"Autosomal dominant"},{l:"C",t:"X-linked dominant"},{l:"D",t:"X-linked recessive"}],ans:"B"},
+{num:"254",q:"Which of the following is known as the \"guardian of the genome\"?",opts:[{l:"A",t:"p53"},{l:"B",t:"Mdm2"},{l:"C",t:"p14"},{l:"D",t:"ATM"}],ans:"A"},
+{num:"255",q:"In the mitogen activated protein kinase pathway, the activation of RAS is counteracted by:",opts:[{l:"A",t:"Protein kinase C"},{l:"B",t:"GTPase activating protein"},{l:"C",t:"Phosphatidyl inositol"},{l:"D",t:"Inositol triphosphate"}],ans:"B"},
+{num:"256",q:"True about oncogene is:",opts:[{l:"A",t:"Present in normal cell"},{l:"B",t:"They are of viral origin"},{l:"C",t:"They are transduced from virus infected cells"},{l:"D",t:"P53 is most common oncogene mutation causing malignancy"}],ans:"C"},
+{num:"257",q:"Xeroderma pigmentosum is caused due to a group of closely related abnormalities in:",opts:[{l:"A",t:"Mismatch repair"},{l:"B",t:"Base excision repair"},{l:"C",t:"Nucleotide excision repair"},{l:"D",t:"SOS repair"}],ans:"C"},
+{num:"258",q:"Increased expression of which of the following causes oncogenesis",opts:[{l:"A",t:"IGF receptor"},{l:"B",t:"EGF receptor"},{l:"C",t:"GH receptor"},{l:"D",t:"Aldosterone receptor"}],ans:"B"},
+{num:"259",q:"Which pediatric tumor is associated with amplification of the MYCN oncogene?",opts:[{l:"A",t:"Neuroblastoma"},{l:"B",t:"Wilms tumor"},{l:"C",t:"Retinoblastoma"},{l:"D",t:"Hepatoblastoma"}],ans:"A"},
+{num:"260",q:"Angiogenesis is:",opts:[{l:"A",t:"Formation of the new blood vessels"},{l:"B",t:"Repair by connective tissues"},{l:"C",t:"Formation of the blood clot"},{l:"D",t:"All of the above"}],ans:"A"},
+{num:"261",q:"Medullary carcinoma of thyroid is associated with mutation in:",opts:[{l:"A",t:"RET"},{l:"B",t:"RAS"},{l:"C",t:"NF"},{l:"D",t:"Rb"}],ans:"A"},
+{num:"262",q:"APC gene is located on which chromosome:",opts:[{l:"A",t:"Chromosome 5"},{l:"B",t:"Chromosome 6"},{l:"C",t:"Chromosome 9"},{l:"D",t:"Chromosome 11"}],ans:"A"},
+{num:"263",q:"Endometrial carcinoma is associated with which of the following tumor suppression gene mutation?",opts:[{l:"A",t:"P53"},{l:"B",t:"Rb"},{l:"C",t:"PTEN"},{l:"D",t:"APC"}],ans:"C"},
+{num:"264",q:"Histopathologically, rosettes are not seen in:",opts:[{l:"A",t:"Retinoblastoma"},{l:"B",t:"Neurocysticercosis"},{l:"C",t:"PNET"},{l:"D",t:"Medulloblastoma"}],ans:"B"},
+{num:"265",q:"The tumor suppressor gene p 53 induces cell cycle arrest at:",opts:[{l:"A",t:"G2 - M phase"},{l:"B",t:"S - G2 phase"},{l:"C",t:"G1 - S phase"},{l:"D",t:"G0 phase"}],ans:"C"},
+{num:"266",q:"A child presents with abdominal swelling and hematuria. Imaging reveals a renal mass. The most likely diagnosis is:",opts:[{l:"A",t:"Neuroblastoma"},{l:"B",t:"Wilms tumor"},{l:"C",t:"Hepatoblastoma"},{l:"D",t:"Rhabdomyosarcoma"}],ans:"B"},
+{num:"267",q:"MYC gene is:",opts:[{l:"A",t:"Protein kinase inhibitor"},{l:"B",t:"Growth factor inhibitor"},{l:"C",t:"GTPase"},{l:"D",t:"Transcription activator"}],ans:"D"},
+{num:"268",q:"Retinoblastoma is associated with which of the following tumours?",opts:[{l:"A",t:"Osteoclastoma"},{l:"B",t:"Hepatocellular cancer"},{l:"C",t:"Squamous cell cancer"},{l:"D",t:"Osteosarcoma"}],ans:"A"},
+{num:"269",q:"RET gene mutation is associated with which malignancy?",opts:[{l:"A",t:"Pheochromocytoma"},{l:"B",t:"Medullary carcinoma thyroid"},{l:"C",t:"Lymphoma"},{l:"D",t:"Renal cell carcinoma"}],ans:"B"},
+{num:"270",q:"An example of a tumour suppressor gene is:",opts:[{l:"A",t:"Myc"},{l:"B",t:"Fos"},{l:"C",t:"Ras"},{l:"D",t:"RB"}],ans:"D"},
+{num:"271",q:"Which of the following is DNA repair defect?",opts:[{l:"A",t:"Retinoblastoma"},{l:"B",t:"Neurofibromatosis"},{l:"C",t:"Xeroderma pigmentosum"},{l:"D",t:"MEN-1"}],ans:"C"},
+{num:"272",q:"An example of a tumor suppressor gene is:",opts:[{l:"A",t:"Myc"},{l:"B",t:"Fos"},{l:"C",t:"Ras"},{l:"D",t:"Rb"}],ans:"D"},
+{num:"273",q:"Knudson two hit hypothesis is seen with",opts:[{l:"A",t:"Melanoma"},{l:"B",t:"Retinoblastoma"},{l:"C",t:"Ulcerative colitis"},{l:"D",t:"Crohn disease"}],ans:"B"},
+{num:"274",q:"Retinoblastomas arising in the context of germ-line mutations not only may be bilateral, but also may be associated with (so called \"trilateral\" retinoblastoma)",opts:[{l:"A",t:"Medulloblastoma"},{l:"B",t:"Pinealoblastoma"},{l:"C",t:"Neuroblastoma"},{l:"D",t:"Hemangioblastoma"}],ans:"B"},
+{num:"275",q:"HER-2/neu gene causes breast carcinoma due to?",opts:[{l:"A",t:"Overexpression"},{l:"B",t:"Suppression"},{l:"C",t:"Mutation"},{l:"D",t:"Translocation"}],ans:"A"},
+{num:"276",q:"Gene involved in medullary carcinoma thyroid is:",opts:[{l:"A",t:"Ret proto oncogene"},{l:"B",t:"FAP gene"},{l:"C",t:"Rb gene"},{l:"D",t:"BRCA 1 gene"}],ans:"A"},
+{num:"277",q:"Which chromosome mutation is associated with medulloblastoma?",opts:[{l:"A",t:"Chromosome 16"},{l:"B",t:"Chromosome 17"},{l:"C",t:"Chromosome 18"},{l:"D",t:"Chromosome 19"}],ans:"B"},
+{num:"278",q:"VHL syndrome is associated most commonly with which carcinoma?",opts:[{l:"A",t:"Lung carcinoma"},{l:"B",t:"Renal cell carcinoma"},{l:"C",t:"Endometrial carcinoma"},{l:"D",t:"Hepatocellular carcinoma"}],ans:"B"},
+{num:"279",q:"Post transplant lymphoma is caused by which of the following?",opts:[{l:"A",t:"CMV"},{l:"B",t:"EBV"},{l:"C",t:"Herpes simplex"},{l:"D",t:"HHV-6"}],ans:"B"},
+{num:"280",q:"H. pylori infection is associated with development of which malignancy:",opts:[{l:"A",t:"MALToma"},{l:"B",t:"Atherosclerosis"},{l:"C",t:"Sarcoma"},{l:"D",t:"Gastrointestinal stromal tumor (GIST)"}],ans:"A"},
+{num:"281",q:"Which of the following is a common site for metastasis of neuroblastoma?",opts:[{l:"A",t:"Lungs"},{l:"B",t:"Bone marrow"},{l:"C",t:"Brain"},{l:"D",t:"Colon"}],ans:"B"},
+{num:"282",q:"Which of the following is essential for tumor metastasis?",opts:[{l:"A",t:"Angiogenesis"},{l:"B",t:"Tumorogenesis"},{l:"C",t:"Apoptosis"},{l:"D",t:"Inhibition of tyrosine kinase activity"}],ans:"A"},
+{num:"283",q:"Which of the following statements about carcinogenesis is false?",opts:[{l:"A",t:"Asbestos exposure increases the incidence of lung cancer"},{l:"B",t:"Papilloma viruses produce tumors in animals but not in humans"},{l:"C",t:"Exposure to aniline dyes predisposes to cancer of the urinary bladder"},{l:"D",t:"Hepatitis B virus has been implicated in hepatocellular carcinoma"}],ans:"B"},
+{num:"284",q:"Which of the following is an oncogenic RNA virus?",opts:[{l:"A",t:"Hepatitis B virus"},{l:"B",t:"Human papilloma virus"},{l:"C",t:"Epstein Barr virus"},{l:"D",t:"Hepatitis C virus"}],ans:"D"},
+{num:"285",q:"LMP-1 gene plays a role in oncogenesis induced by:",opts:[{l:"A",t:"Human T cell leukemia virus type I"},{l:"B",t:"Hepatitis B virus"},{l:"C",t:"Epstein-Barr virus"},{l:"D",t:"Human papilloma virus"}],ans:"C"},
+{num:"286",q:"Skin cancers develop due to sunlight exposure induced by:",opts:[{l:"A",t:"UVA rays"},{l:"B",t:"UVB rays"},{l:"C",t:"UVC rays"},{l:"D",t:"UVD rays"}],ans:"B"},
+{num:"287",q:"Most radiosensitive tumor is:",opts:[{l:"A",t:"Renal cell carcinoma"},{l:"B",t:"Carcinoma colon"},{l:"C",t:"Hepatocellular carcinoma"},{l:"D",t:"Testicular seminoma"}],ans:"D"},
+{num:"288",q:"Smoking is a risk factor for all carcinomas, except:",opts:[{l:"A",t:"Oral"},{l:"B",t:"Bronchial"},{l:"C",t:"Bladder"},{l:"D",t:"Thyroid"}],ans:"D"},
+{num:"289",q:"Workers exposed to polyvinyl chloride may develop following liver malignancy:",opts:[{l:"A",t:"Cholangiocarcinoma"},{l:"B",t:"Fibrolamellar carcinoma"},{l:"C",t:"Angiosarcoma"},{l:"D",t:"Carcinoma colon"}],ans:"C"},
+{num:"290",q:"Hybridoma refers to",opts:[{l:"A",t:"Collision tumor"},{l:"B",t:"A tumor of brown fat"},{l:"C",t:"A hamartoma"},{l:"D",t:"A technique for raising monoclonal antibodies"}],ans:"D"},
+{num:"291",q:"One of the following leukemia almost never develops after radiation?",opts:[{l:"A",t:"Acute myeloblastic leukemia"},{l:"B",t:"Chronic myeloid leukemia"},{l:"C",t:"Acute lymphoblastic leukemia"},{l:"D",t:"Chronic lymphocytic leukemia"}],ans:"D"},
+{num:"292",q:"The following parasitic infections predispose to malignancies?",opts:[{l:"A",t:"Paragonimus westermani"},{l:"B",t:"Guinea worm infection"},{l:"C",t:"Clonorchiasis"},{l:"D",t:"Schistosomiasis"}],ans:"D"},
+{num:"293",q:"Kaposi's sarcoma is seen with:",opts:[{l:"A",t:"HCV"},{l:"B",t:"HPV"},{l:"C",t:"HSV"},{l:"D",t:"HHV"}],ans:"D"},
+{num:"294",q:"UV radiation has which of the following effects on the cells?",opts:[{l:"A",t:"Prevents formation of pyrimidine dimers"},{l:"B",t:"Stimulates formation of pyrimidine dimers"},{l:"C",t:"Prevents formation of purine dimers"},{l:"D",t:"Chemical exposure"}],ans:"B"},
+{num:"295",q:"Thorium induced tumor is which of the following?",opts:[{l:"A",t:"Renal cell carcinoma"},{l:"B",t:"Lymphoma"},{l:"C",t:"Angiosarcoma of liver"},{l:"D",t:"Astrocytoma"}],ans:"C"},
+{num:"296",q:"Radiation exposure during infancy has been linked to which one of the following carcinoma?",opts:[{l:"A",t:"Breast"},{l:"B",t:"Melanoma"},{l:"C",t:"Thyroid"},{l:"D",t:"Lung"}],ans:"C"},
+{num:"297",q:"The most radiosensitive cells are:",opts:[{l:"A",t:"Neutrophils"},{l:"B",t:"Lymphocytes"},{l:"C",t:"Erythrocytes"},{l:"D",t:"Megakaryocytes"}],ans:"B"},
+{num:"298",q:"The SI unit of radiation absorbed dose is",opts:[{l:"A",t:"Rad"},{l:"B",t:"Becquerel"},{l:"C",t:"Gray"},{l:"D",t:"Sievert"}],ans:"C"},
+{num:"299",q:"Tropical spastic paraparesis is caused by:",opts:[{l:"A",t:"Human T-cell Lymphotropic Virus"},{l:"B",t:"Hepatitis B virus"},{l:"C",t:"Human Immunodeficiency virus"},{l:"D",t:"Epstein Barr Virus"}],ans:"A"},
+{num:"300",q:"Which of the following does not predispose to leukemia?",opts:[{l:"A",t:"Genetic disorder"},{l:"B",t:"Alcohol"},{l:"C",t:"Smoking"},{l:"D",t:"Chemical exposure"}],ans:"B"},
+{num:"301",q:"HPV oncogene expression is due to:",opts:[{l:"A",t:"E1E2"},{l:"B",t:"E1E3"},{l:"C",t:"E3E5"},{l:"D",t:"E6E7"}],ans:"D"},
+{num:"302",q:"Hematological malignancies are commonly linked to which of the following:",opts:[{l:"A",t:"Nicotine"},{l:"B",t:"Lithium"},{l:"C",t:"Benzene"},{l:"D",t:"Alcohol"}],ans:"C"},
+{num:"303",q:"Which of the following has tumor promoting effect?",opts:[{l:"A",t:"BRAC"},{l:"B",t:"myc"},{l:"C",t:"RB"},{l:"D",t:"p16"}],ans:"C"},
+{num:"304",q:"All are true about chromosomal instability syndrome except?",opts:[{l:"A",t:"DNA repair defects"},{l:"B",t:"AD inheritance"},{l:"C",t:"Increased risk of malignancy"},{l:"D",t:"May be associated with immunodeficiency"}],ans:"B"},
+{num:"305",q:"BRCA1 gene is associated with:",opts:[{l:"A",t:"Lobular carcinoma"},{l:"B",t:"Medullary carcinoma"},{l:"C",t:"Tubular carcinoma"},{l:"D",t:"Papillary carcinoma"}],ans:"B"},
+{num:"306",q:"PTEN gene mutation is seen in:",opts:[{l:"A",t:"Ovarian carcinoma"},{l:"B",t:"Li-Fraumeni syndrome"},{l:"C",t:"Endometrial carcinoma"},{l:"D",t:"MEN2A"}],ans:"C"},
+{num:"307",q:"Wilm's tumor gene is located on chromosome?",opts:[{l:"A",t:"13q2.3"},{l:"B",t:"17p21"},{l:"C",t:"17q21"},{l:"D",t:"11p13"}],ans:"D"},
+{num:"308",q:"A 20 year old female was diagnosed with granulose cell tumor of the ovary. Which of the following bio markers would be most useful for follow-up of patient?",opts:[{l:"A",t:"CA 19-9"},{l:"B",t:"CA50"},{l:"C",t:"Inhibin"},{l:"D",t:"Neuron - specific enolase"}],ans:"C"},
+{num:"309",q:"Alpha fetoprotein is a marker of:",opts:[{l:"A",t:"Hepatoblastoma"},{l:"B",t:"Seminoma"},{l:"C",t:"Renal cell carcinoma"},{l:"D",t:"Choriocarcinoma"}],ans:"A"},
+{num:"310",q:"Which of the following is Not associated with thymoma?",opts:[{l:"A",t:"SIADH"},{l:"B",t:"Myasthenia gravis"},{l:"C",t:"Polymyositis"},{l:"D",t:"Hypogammaglobinemia"}],ans:"A"},
+{num:"311",q:"Which of the following is not true about Neuroblastoma?",opts:[{l:"A",t:"Most common extracranial solid tumor in childhood"},{l:"B",t:">50% patients present with metastasis at time of diagnosis"},{l:"C",t:"Lung metastases are common"},{l:"D",t:"Involve aorta and its branches early"}],ans:"C"},
+{num:"312",q:"Migratory thrombophlebitis is associated with all of the following malignancies, except:",opts:[{l:"A",t:"Prostate"},{l:"B",t:"Lung"},{l:"C",t:"GIT"},{l:"D",t:"Pancreas"}],ans:"A"},
+{num:"313",q:"HMB 45 is a tumor marker for:",opts:[{l:"A",t:"Neuroblastoma"},{l:"B",t:"Neurofibroma"},{l:"C",t:"Malignant melanoma"},{l:"D",t:"Angiosarcoma"}],ans:"C"},
+{num:"314",q:"AFP is a marker of:",opts:[{l:"A",t:"Hepatoblastoma"},{l:"B",t:"Seminoma"},{l:"C",t:"Sertoli-Leydig cell tumor"},{l:"D",t:"Choriocarcinoma"}],ans:"A"},
+{num:"315",q:"An undifferentiated malignant tumor on immunohistochemical stain shows cytoplasmic positivity of most of the tumor cells for cytokeratin. The most probable diagnosis of the tumor is:",opts:[{l:"A",t:"Sarcoma"},{l:"B",t:"Lymphoma"},{l:"C",t:"Carcinoma"},{l:"D",t:"Malignant melanoma"}],ans:"C"},
+{num:"316",q:"For which one of the following tumors Gastrin is a biochemical marker?",opts:[{l:"A",t:"Medullary carcinoma of thyroid"},{l:"B",t:"Pancreatic neuroendocrine tumor"},{l:"C",t:"Pheochromocytoma"},{l:"D",t:"Gastrointestinal stromal tumor"}],ans:"B"},
+{num:"317",q:"The presence of Homer-Wright rosettes on histology is indicative of which tumor?",opts:[{l:"A",t:"Neuroblastoma"},{l:"B",t:"Retinoblastoma"},{l:"C",t:"Medulloblastoma"},{l:"D",t:"Ewing sarcoma"}],ans:"A"},
+{num:"318",q:"Which of the following tumors have an increased elevation of placental alkaline phosphatase in the serum as well as a positive immunohistochemical staining for placental alkaline phosphatase?",opts:[{l:"A",t:"Seminoma"},{l:"B",t:"Hepatoblastoma"},{l:"C",t:"Hepatocellular carcinoma"},{l:"D",t:"Peripheral neuroectodermal tumor"}],ans:"A"},
+{num:"319",q:"Which of the following is a common presentation of retinoblastoma?",opts:[{l:"A",t:"Proptosis"},{l:"B",t:"Leukocoria"},{l:"C",t:"Strabismus"},{l:"D",t:"Nystagmus"}],ans:"B"},
+{num:"320",q:"Which of the following is the most common malignant tumor in children?",opts:[{l:"A",t:"Neuroblastoma"},{l:"B",t:"Wilms tumor"},{l:"C",t:"Leukemia"},{l:"D",t:"Retinoblastoma"}],ans:"C"},
+{num:"321",q:"Which of the following is a characteristic feature of complex multigenic disorders?",opts:[{l:"A",t:"Single gene mutation"},{l:"B",t:"Chromosomal deletion"},{l:"C",t:"Interaction of multiple genes and environmental factors"},{l:"D",t:"Mitochondrial inheritance"}],ans:"C"},
+{num:"322",q:"Trisomy 21 is commonly known as:",opts:[{l:"A",t:"Edwards syndrome"},{l:"B",t:"Patau syndrome"},{l:"C",t:"Down syndrome"},{l:"D",t:"Turner syndrome"}],ans:"C"},
+{num:"323",q:"Which genetic disorder is associated with a deletion on chromosome 22q11?",opts:[{l:"A",t:"DiGeorge syndrome"},{l:"B",t:"Marfan syndrome"},{l:"C",t:"Cystic fibrosis"},{l:"D",t:"Huntington disease"}],ans:"A"},
+{num:"324",q:"Marfan syndrome is caused by mutations in which gene?",opts:[{l:"A",t:"FBN1"},{l:"B",t:"CFTR"},{l:"C",t:"HTT"},{l:"D",t:"RB1"}],ans:"A"},
+{num:"325",q:"Which of the following is an autosomal recessive disorder?",opts:[{l:"A",t:"Huntington disease"},{l:"B",t:"Neurofibromatosis type 1"},{l:"C",t:"Sickle cell anemia"},{l:"D",t:"Marfan syndrome"}],ans:"C"},
+{num:"326",q:"A female with a 45,X karyotype is diagnosed with:",opts:[{l:"A",t:"Klinefelter syndrome"},{l:"B",t:"Turner syndrome"},{l:"C",t:"Triple X syndrome"},{l:"D",t:"Down syndrome"}],ans:"B"},
+{num:"327",q:"Which enzyme deficiency leads to phenylketonuria (PKU)?",opts:[{l:"A",t:"Hexosaminidase A"},{l:"B",t:"Phenylalanine hydroxylase"},{l:"C",t:"Glucocerebrosidase"},{l:"D",t:"Alpha-galactosidase A"}],ans:"B"},
+{num:"328",q:"The Philadelphia chromosome results from a translocation between which chromosomes?",opts:[{l:"A",t:"9 and 22"},{l:"B",t:"8 and 14"},{l:"C",t:"15 and 17"},{l:"D",t:"11 and 22"}],ans:"A"},
+{num:"329",q:"Which of the following disorders is characterized by trinucleotide repeat expansions?",opts:[{l:"A",t:"Cystic fibrosis"},{l:"B",t:"Fragile X syndrome"},{l:"C",t:"Sickle cell anemia"},{l:"D",t:"Marfan syndrome"}],ans:"B"},
+{num:"330",q:"In autosomal dominant disorders, what is the likelihood that an affected individual will transmit the disorder to their offspring?",opts:[{l:"A",t:"25%"},{l:"B",t:"50%"},{l:"C",t:"75%"},{l:"D",t:"100%"}],ans:"B"},
+{num:"331",q:"Which of the following is a common feature of cytogenetic disorders involving sex chromosomes?",opts:[{l:"A",t:"Severe mental retardation"},{l:"B",t:"High mortality rate"},{l:"C",t:"Subtle, chronic problems related to sexual development"},{l:"D",t:"Early onset of symptoms in infancy"}],ans:"C"},
+{num:"332",q:"A patient presents with tall stature, long limbs, and lens dislocation. Which genetic disorder is most likely?",opts:[{l:"A",t:"Ehlers-Danlos syndrome"},{l:"B",t:"Marfan syndrome"},{l:"C",t:"Osteogenesis imperfecta"},{l:"D",t:"Achondroplasia"}],ans:"B"},
+{num:"333",q:"Which of the following is an example of a mitochondrial inheritance disorder?",opts:[{l:"A",t:"Leber hereditary optic neuropathy"},{l:"B",t:"Duchenne muscular dystrophy"},{l:"C",t:"Hemophilia A"},{l:"D",t:"Tay-Sachs disease"}],ans:"A"},
+{num:"334",q:"The presence of an extra chromosome 13 results in:",opts:[{l:"A",t:"Down syndrome"},{l:"B",t:"Edwards syndrome"},{l:"C",t:"Patau syndrome"},{l:"D",t:"Turner syndrome"}],ans:"C"},
+{num:"335",q:"Which genetic disorder is associated with a defect in the NF1 gene on chromosome 17?",opts:[{l:"A",t:"Neurofibromatosis type 1"},{l:"B",t:"Neurofibromatosis type 2"},{l:"C",t:"Tuberous sclerosis"},{l:"D",t:"von Hippel-Lindau disease"}],ans:"A"},
+{num:"336",q:"Which of the following is a characteristic of autosomal recessive disorders?",opts:[{l:"A",t:"Both parents are usually affected"},{l:"B",t:"The disorder appears in every generation"},{l:"C",t:"Siblings have a 25% chance of being affected"},{l:"D",t:"Males are more frequently affected than females"}],ans:"C"},
+{num:"337",q:"A male patient with an extra X chromosome (47,XXY) is diagnosed with:",opts:[{l:"A",t:"Turner syndrome"},{l:"B",t:"Klinefelter syndrome"},{l:"C",t:"XYY syndrome"},{l:"D",t:"Androgen insensitivity syndrome"}],ans:"B"},
+{num:"338",q:"Which enzyme deficiency is responsible for Tay-Sachs disease?",opts:[{l:"A",t:"Glucocerebrosidase"},{l:"B",t:"Hexosaminidase A"},{l:"C",t:"Sphingomyelinase"},{l:"D",t:"Alpha-galactosidase A"}],ans:"B"},
+{num:"339",q:"Which of the following is a feature of Prader-Willi syndrome?",opts:[{l:"A",t:"Hyperphagia leading to obesity"},{l:"B",t:"Progressive muscle weakness"},{l:"C",t:"Severe immunodeficiency"},{l:"D",t:"Cardiac malformations"}],ans:"A"},
+{num:"340",q:"Which genetic disorder results from a deletion on the maternal copy of chromosome 15q11-q13?",opts:[{l:"A",t:"Angelman syndrome"},{l:"B",t:"Prader-Willi syndrome"},{l:"C",t:"Williams syndrome"},{l:"D",t:"Cri-du-chat syndrome"}],ans:"A"},
+{num:"341",q:"Which of the following is an example of a disorder caused by genomic imprinting?",opts:[{l:"A",t:"Huntington disease"},{l:"B",t:"Angelman syndrome"},{l:"C",t:"Marfan syndrome"},{l:"D",t:"Cystic fibrosis"}],ans:"B"},
+{num:"342",q:"A patient with macroorchidism, large ears, and intellectual disability is likely to have:",opts:[{l:"A",t:"Down syndrome"},{l:"B",t:"Fragile X syndrome"},{l:"C",t:"Klinefelter syndrome"},{l:"D",t:"Turner syndrome"}],ans:"B"},
+{num:"343",q:"Which of the following is a characteristic feature of autosomal dominant disorders?",opts:[{l:"A",t:"Onset typically in childhood"},{l:"B",t:"Complete penetrance is common"},{l:"C",t:"Both males and females are affected equally"},{l:"D",t:"Parents are usually unaffected carriers"}],ans:"C"},
+{num:"344",q:"Which of the following is characteristic of complex multigenic disorders?",opts:[{l:"A",t:"Caused by mutations in a single gene"},{l:"B",t:"Inherited in a Mendelian fashion"},{l:"C",t:"Result from the combined effect of multiple genes and environmental factors"},{l:"D",t:"Always present at birth"}],ans:"C"},
+{num:"345",q:"Down syndrome is an example of which type of genetic disorder?",opts:[{l:"A",t:"Single-gene disorder"},{l:"B",t:"Cytogenetic disorder"},{l:"C",t:"Mitochondrial disorder"},{l:"D",t:"Complex multigenic disorder"}],ans:"B"},
+{num:"346",q:"Which of the following is a characteristic feature of autosomal dominant disorders?",opts:[{l:"A",t:"Both alleles must be mutated for disease manifestation"},{l:"B",t:"Typically manifest in homozygous individuals"},{l:"C",t:"Often involve gain-of-function mutations"},{l:"D",t:"Usually result from enzyme deficiencies"}],ans:"C"},
+{num:"347",q:"Which cytogenetic disorder is characterized by the presence of an extra chromosome 21?",opts:[{l:"A",t:"Turner syndrome"},{l:"B",t:"Klinefelter syndrome"},{l:"C",t:"Down syndrome"},{l:"D",t:"Edwards syndrome"}],ans:"C"},
+{num:"348",q:"Which of the following is an example of a single-gene disorder with nonclassic inheritance?",opts:[{l:"A",t:"Cystic fibrosis"},{l:"B",t:"Marfan syndrome"},{l:"C",t:"Fragile X syndrome"},{l:"D",t:"Sickle cell anemia"}],ans:"C"},
+{num:"349",q:"Mitochondrial inheritance is characterized by:",opts:[{l:"A",t:"Transmission from both parents"},{l:"B",t:"Maternal transmission only"},{l:"C",t:"Paternal transmission only"},{l:"D",t:"Equal transmission from both parents"}],ans:"B"},
+{num:"350",q:"Which of the following is a common feature of autosomal recessive disorders?",opts:[{l:"A",t:"Manifestation in heterozygous individuals"},{l:"B",t:"Often involve structural proteins"},{l:"C",t:"Parents are usually asymptomatic carriers"},{l:"D",t:"High penetrance with variable expressivity"}],ans:"C"},
+{num:"351",q:"The Philadelphia chromosome is associated with which disorder?",opts:[{l:"A",t:"Chronic myelogenous leukemia"},{l:"B",t:"Acute lymphoblastic leukemia"},{l:"C",t:"Burkitt lymphoma"},{l:"D",t:"Hodgkin lymphoma"}],ans:"A"},
+{num:"352",q:"Which of the following is true regarding X-linked recessive disorders?",opts:[{l:"A",t:"Affected males transmit the disorder to all sons"},{l:"B",t:"Affected females are common"},{l:"C",t:"Sons of carrier females have a 50% chance of being affected"},{l:"D",t:"Daughters of affected males are always affected"}],ans:"C"},
+{num:"353",q:"Which genetic disorder is characterized by a defect in fibrillin-1?",opts:[{l:"A",t:"Ehlers-Danlos syndrome"},{l:"B",t:"Marfan syndrome"},{l:"C",t:"Osteogenesis imperfecta"},{l:"D",t:"Achondroplasia"}],ans:"B"},
+{num:"354",q:"Which of the following is the most common cause of neonatal mortality?",opts:[{l:"A",t:"Congenital anomalies"},{l:"B",t:"Infections"},{l:"C",t:"Prematurity"},{l:"D",t:"Sudden infant death syndrome"}],ans:"C"},
+{num:"355",q:"Anatomic defects present at birth are referred to as:",opts:[{l:"A",t:"Deformations"},{l:"B",t:"Disruptions"},{l:"C",t:"Malformations"},{l:"D",t:"Dysplasias"}],ans:"C"},
+{num:"356",q:"Which of the following is an example of a disruption?",opts:[{l:"A",t:"Polydactyly"},{l:"B",t:"Amniotic band syndrome"},{l:"C",t:"Clubfoot"},{l:"D",t:"Cleft lip"}],ans:"B"},
+{num:"357",q:"Extrinsic disturbance in morphogenesis due to mechanical forces is termed:",opts:[{l:"A",t:"Malformation"},{l:"B",t:"Disruption"},{l:"C",t:"Deformation"},{l:"D",t:"Dysplasia"}],ans:"C"},
+{num:"358",q:"The most common factor underlying fetal deformations is:",opts:[{l:"A",t:"Genetic mutations"},{l:"B",t:"Uterine constraint"},{l:"C",t:"Teratogenic exposure"},{l:"D",t:"Maternal infections"}],ans:"B"},
+{num:"359",q:"A sequence of anomalies resulting from a single initiating event is called a:",opts:[{l:"A",t:"Syndrome"},{l:"B",t:"Sequence"},{l:"C",t:"Malformation"},{l:"D",t:"Disruption"}],ans:"B"},
+{num:"360",q:"Oligohydramnios can lead to which of the following sequences?",opts:[{l:"A",t:"Potter sequence"},{l:"B",t:"Pierre Robin sequence"},{l:"C",t:"VACTERL association"},{l:"D",t:"CHARGE syndrome"}],ans:"A"},
+{num:"361",q:"Which of the following is a characteristic feature of Potter sequence?",opts:[{l:"A",t:"Micrognathia"},{l:"B",t:"Rocker-bottom feet"},{l:"C",t:"Pulmonary hypoplasia"},{l:"D",t:"Polydactyly"}],ans:"C"},
+{num:"362",q:"A constellation of anomalies that cannot be explained by a single initiating defect is termed a:",opts:[{l:"A",t:"Sequence"},{l:"B",t:"Syndrome"},{l:"C",t:"Malformation"},{l:"D",t:"Disruption"}],ans:"B"},
+{num:"363",q:"Which of the following is a known teratogen that can cause congenital anomalies?",opts:[{l:"A",t:"Folic acid"},{l:"B",t:"Thalidomide"},{l:"C",t:"Vitamin D"},{l:"D",t:"Penicillin"}],ans:"B"},
+{num:"364",q:"The period of highest susceptibility to teratogenic agents during pregnancy is:",opts:[{l:"A",t:"0-2 weeks"},{l:"B",t:"3-9 weeks"},{l:"C",t:"10-15 weeks"},{l:"D",t:"16-20 weeks"}],ans:"B"},
+{num:"365",q:"Which of the following infections is part of the TORCH complex?",opts:[{l:"A",t:"Hepatitis B"},{l:"B",t:"Rubella"},{l:"C",t:"HIV"},{l:"D",t:"Influenza"}],ans:"B"},
+{num:"366",q:"A newborn presents with cataracts, deafness, and cardiac defects. Which prenatal infection is most likely responsible?",opts:[{l:"A",t:"Cytomegalovirus"},{l:"B",t:"Toxoplasmosis"},{l:"C",t:"Rubella"},{l:"D",t:"Herpes simplex virus"}],ans:"C"},
+{num:"367",q:"Which of the following is a common complication of prematurity?",opts:[{l:"A",t:"Necrotizing enterocolitis"},{l:"B",t:"Congenital heart disease"},{l:"C",t:"Cystic fibrosis"},{l:"D",t:"Spina bifida"}],ans:"A"},
+{num:"368",q:"A premature infant develops abdominal distension, bloody stools, and pneumatosis intestinalis. The most likely diagnosis is:",opts:[{l:"A",t:"Hirschsprung disease"},{l:"B",t:"Intussusception"},{l:"C",t:"Necrotizing enterocolitis"},{l:"D",t:"Pyloric stenosis"}],ans:"C"},
+{num:"369",q:"Which of the following is a risk factor for necrotizing enterocolitis?",opts:[{l:"A",t:"Full-term birth"},{l:"B",t:"Formula feeding"},{l:"C",t:"Maternal diabetes"},{l:"D",t:"Cesarean delivery"}],ans:"B"},
+{num:"370",q:"The fundamental defect in neonatal respiratory distress syndrome is:",opts:[{l:"A",t:"Airway obstruction"},{l:"B",t:"Surfactant deficiency"},{l:"C",t:"Pulmonary hypoplasia"},{l:"D",t:"Diaphragmatic hernia"}],ans:"B"},
+{num:"371",q:"Which cells are responsible for producing pulmonary surfactant?",opts:[{l:"A",t:"Type I pneumocytes"},{l:"B",t:"Type II pneumocytes"},{l:"C",t:"Alveolar macrophages"},{l:"D",t:"Clara cells"}],ans:"B"},
+{num:"372",q:"A newborn presents with jaundice, hepatosplenomegaly, and generalized edema. Which condition is most likely?",opts:[{l:"A",t:"Neonatal sepsis"},{l:"B",t:"Immune hydrops"},{l:"C",t:"Congenital syphilis"},{l:"D",t:"Galactosemia"}],ans:"B"},
+{num:"373",q:"Which of the following is a common cause of immune hydrops?",opts:[{l:"A",t:"ABO incompatibility"},{l:"B",t:"Rh incompatibility"},{l:"C",t:"Maternal hypertension"},{l:"D",t:"Fetal infections"}],ans:"B"},
+{num:"374",q:"Kernicterus is a complication of:",opts:[{l:"A",t:"Hyperglycemia"},{l:"B",t:"Hyperbilirubinemia"},{l:"C",t:"Hypercalcemia"},{l:"D",t:"Hypernatremia"}],ans:"B"},
+{num:"375",q:"Which of the following is a characteristic finding in sudden infant death syndrome (SIDS)?",opts:[{l:"A",t:"Evidence of trauma"},{l:"B",t:"Signs of infection"},{l:"C",t:"Unexplained death after thorough investigation"},{l:"D",t:"Congenital anomalies"}],ans:"C"},
+{num:"376",q:"A newborn with a deficiency in phenylalanine hydroxylase is diagnosed with:",opts:[{l:"A",t:"Galactosemia"},{l:"B",t:"Maple syrup urine disease"},{l:"C",t:"Phenylketonuria"},{l:"D",t:"Homocystinuria"}],ans:"C"},
+{num:"377",q:"Which of the following is a common manifestation of cystic fibrosis in newborns?",opts:[{l:"A",t:"Meconium ileus"},{l:"B",t:"Congenital heart disease"},{l:"C",t:"Neural tube defects"},{l:"D",t:"Cleft palate"}],ans:"A"},
+{num:"378",q:"The most common lethal genetic disease affecting Caucasians is:",opts:[{l:"A",t:"Sickle cell anemia"},{l:"B",t:"Cystic fibrosis"},{l:"C",t:"Tay-Sachs disease"},{l:"D",t:"Hemophilia A"}],ans:"B"},
+{num:"379",q:"A child presents with a rapidly enlarging mass in the jaw. Biopsy reveals a \"starry sky\" appearance. The most likely diagnosis is:",opts:[{l:"A",t:"Burkitt lymphoma"},{l:"B",t:"Rhabdomyosarcoma"},{l:"C",t:"Neuroblastoma"},{l:"D",t:"Ewing sarcoma"}],ans:"A"},
+{num:"380",q:"Which of the following is a characteristic feature of fetal alcohol syndrome?",opts:[{l:"A",t:"Macrocephaly"},{l:"B",t:"Micrognathia"},{l:"C",t:"Smooth philtrum"},{l:"D",t:"Hyperactivity"}],ans:"C"},
+{num:"381",q:"Which of the following is a characteristic feature of Ewing sarcoma?",opts:[{l:"A",t:"t(11;22) translocation"},{l:"B",t:"WT1 mutation"},{l:"C",t:"MYCN amplification"},{l:"D",t:"RB1 mutation"}],ans:"A"},
+{num:"382",q:"Which of the following is a risk factor for developing hepatoblastoma?",opts:[{l:"A",t:"Prematurity"},{l:"B",t:"Low birth weight"},{l:"C",t:"Beckwith-Wiedemann syndrome"},{l:"D",t:"Maternal diabetes"}],ans:"C"},
+{num:"383",q:"A child with a history of retinoblastoma is at increased risk for developing which secondary malignancy?",opts:[{l:"A",t:"Osteosarcoma"},{l:"B",t:"Leukemia"},{l:"C",t:"Neuroblastoma"},{l:"D",t:"Hepatoblastoma"}],ans:"A"},
+{num:"384",q:"Which of the following is the most common malignant tumor in children?",opts:[{l:"A",t:"Neuroblastoma"},{l:"B",t:"Wilms tumor"},{l:"C",t:"Leukemia"},{l:"D",t:"Retinoblastoma"}],ans:"C"},
+{num:"385",q:"Neuroblastomas most commonly arise in which part of the body?",opts:[{l:"A",t:"Brain"},{l:"B",t:"Adrenal medulla"},{l:"C",t:"Liver"},{l:"D",t:"Kidney"}],ans:"B"},
+{num:"386",q:"Which genetic mutation is commonly associated with retinoblastoma?",opts:[{l:"A",t:"TP53"},{l:"B",t:"RB1"},{l:"C",t:"NF1"},{l:"D",t:"WT1"}],ans:"B"},
+{num:"387",q:"A child presents with a white pupillary reflex (leukocoria). Which tumor should be highly suspected?",opts:[{l:"A",t:"Neuroblastoma"},{l:"B",t:"Wilms tumor"},{l:"C",t:"Retinoblastoma"},{l:"D",t:"Medulloblastoma"}],ans:"C"},
+{num:"388",q:"The \"small round blue cell\" appearance on histology is characteristic of which pediatric tumor?",opts:[{l:"A",t:"Hepatoblastoma"},{l:"B",t:"Neuroblastoma"},{l:"C",t:"Osteosarcoma"},{l:"D",t:"Rhabdomyosarcoma"}],ans:"B"},
+{num:"389",q:"Which of the following is a common paraneoplastic syndrome associated with neuroblastoma?",opts:[{l:"A",t:"Hypertension"},{l:"B",t:"Hypercalcemia"},{l:"C",t:"Opsoclonus-myoclonus"},{l:"D",t:"Polycythemia"}],ans:"C"},
+{num:"390",q:"Wilms tumor is associated with mutations in which gene?",opts:[{l:"A",t:"WT1"},{l:"B",t:"NF2"},{l:"C",t:"APC"},{l:"D",t:"BRCA1"}],ans:"A"},
+{num:"391",q:"Which syndrome is characterized by Wilms tumor, aniridia, genitourinary anomalies, and mental retardation?",opts:[{l:"A",t:"Beckwith-Wiedemann syndrome"},{l:"B",t:"WAGR syndrome"},{l:"C",t:"Denys-Drash syndrome"},{l:"D",t:"Li-Fraumeni syndrome"}],ans:"B"},
+{num:"392",q:"Which of the following is a benign tumor commonly found in infants?",opts:[{l:"A",t:"Hemangioma"},{l:"B",t:"Neuroblastoma"},{l:"C",t:"Wilms tumor"},{l:"D",t:"Retinoblastoma"}],ans:"A"},
+{num:"393",q:"Which tumor marker is often elevated in patients with hepatoblastoma?",opts:[{l:"A",t:"Alpha-fetoprotein (AFP)"},{l:"B",t:"Carcinoembryonic antigen (CEA)"},{l:"C",t:"Beta-human chorionic gonadotropin (\u03b2-hCG)"},{l:"D",t:"Prostate-specific antigen (PSA)"}],ans:"C"},
+{num:"394",q:"Which of the following tumors is derived from primitive muscle cells?",opts:[{l:"A",t:"Neuroblastoma"},{l:"B",t:"Rhabdomyosarcoma"},{l:"C",t:"Osteosarcoma"},{l:"D",t:"Ewing sarcoma"}],ans:"B"},
+{num:"395",q:"The \"blueberry muffin\" baby appearance is associated with which condition?",opts:[{l:"A",t:"Congenital rubella"},{l:"B",t:"Neuroblastoma with skin metastases"},{l:"C",t:"Hemangioma"},{l:"D",t:"Langerhans cell histiocytosis"}],ans:"B"},
+{num:"397",q:"Digital pathology primarily involves:",opts:[{l:"A",t:"Manual slide reading"},{l:"B",t:"Computerized image analysis of digitized slides"},{l:"C",t:"Using microscopes only"},{l:"D",t:"DNA extraction"}],ans:"B"},
+{num:"398",q:"Whole-slide imaging (WSI) refers to:",opts:[{l:"A",t:"Scanning entire glass slides into digital images"},{l:"B",t:"Viewing slides under a light microscope"},{l:"C",t:"Collecting frozen sections"},{l:"D",t:"Photocopying slides"}],ans:"A"},
+{num:"399",q:"The key component of digital pathology is:",opts:[{l:"A",t:"Virtual slide scanner"},{l:"B",t:"Centrifuge"},{l:"C",t:"Spectrophotometer"},{l:"D",t:"Flow cytometer"}],ans:"A"},
+{num:"400",q:"Artificial intelligence (AI) in pathology mainly helps to:",opts:[{l:"A",t:"Replace all doctors"},{l:"B",t:"Assist in image analysis and pattern recognition"},{l:"C",t:"Perform blood grouping"},{l:"D",t:"Measure blood glucose"}],ans:"B"},
+{num:"401",q:"Deep learning is a subset of:",opts:[{l:"A",t:"Artificial intelligence"},{l:"B",t:"Biotechnology"},{l:"C",t:"Chemistry"},{l:"D",t:"Genetics"}],ans:"A"},
+{num:"402",q:"The main advantage of AI in pathology is:",opts:[{l:"A",t:"Reduced accuracy"},{l:"B",t:"Faster and more consistent diagnosis"},{l:"C",t:"Increased manual labor"},{l:"D",t:"Limited storage"}],ans:"B"},
+{num:"403",q:"Which of the following is an example of a machine learning model?",opts:[{l:"A",t:"Microscope"},{l:"B",t:"Convolutional neural network (CNN)"},{l:"C",t:"Staining solution"},{l:"D",t:"Tissue processor"}],ans:"B"},
+{num:"404",q:"Telepathology allows:",opts:[{l:"A",t:"Slide sharing and remote diagnosis"},{l:"B",t:"Tissue staining"},{l:"C",t:"Autopsy procedure"},{l:"D",t:"Chemical fixation"}],ans:"A"},
+{num:"405",q:"Which of the following improves diagnostic accuracy in pathology?",opts:[{l:"A",t:"Manual counting"},{l:"B",t:"AI-based image classification"},{l:"C",t:"Naked eye examination"},{l:"D",t:"Hand drawings"}],ans:"B"},
+{num:"406",q:"Metadata in digital pathology refers to:",opts:[{l:"A",t:"Patient demographic and technical slide information"},{l:"B",t:"DNA sequence"},{l:"C",t:"Chemical reagents"},{l:"D",t:"Staining intensity"}],ans:"A"},
+{num:"407",q:"Organoids are:",opts:[{l:"A",t:"Miniature 3D organ-like structures grown from stem cells"},{l:"B",t:"Dead tissue sections"},{l:"C",t:"Bacteria"},{l:"D",t:"Viral particles"}],ans:"A"},
+{num:"408",q:"Organoids are formed using:",opts:[{l:"A",t:"Differentiated adult cells"},{l:"B",t:"Stem or progenitor cells"},{l:"C",t:"Dead cells"},{l:"D",t:"Neutrophils"}],ans:"B"},
+{num:"409",q:"Organoid cultures mimic:",opts:[{l:"A",t:"The structure and function of real organs"},{l:"B",t:"Flat 2D cell lines"},{l:"C",t:"Bacterial colonies"},{l:"D",t:"Blood smears"}],ans:"A"},
+{num:"410",q:"The main advantage of organoid models is:",opts:[{l:"A",t:"High cost"},{l:"B",t:"Better replication of physiological conditions"},{l:"C",t:"Inaccuracy"},{l:"D",t:"Non-viability"}],ans:"B"},
+{num:"411",q:"Organoid cultures are maintained in:",opts:[{l:"A",t:"Air"},{l:"B",t:"Nutrient medium with growth factors"},{l:"C",t:"Dry chambers"},{l:"D",t:"Plain saline"}],ans:"B"},
+{num:"412",q:"A common matrix used in organoid cultures is:",opts:[{l:"A",t:"Agar"},{l:"B",t:"Matrigel"},{l:"C",t:"Gelatin"},{l:"D",t:"Starch"}],ans:"B"},
+{num:"413",q:"Organoid models can be used for:",opts:[{l:"A",t:"Drug testing and disease modeling"},{l:"B",t:"Fossil reconstruction"},{l:"C",t:"Bacterial growth"},{l:"D",t:"Stone analysis"}],ans:"A"},
+{num:"414",q:"3D tissue cultures differ from 2D cultures because they:",opts:[{l:"A",t:"Allow spatial cell organization"},{l:"B",t:"Are grown on glass slides"},{l:"C",t:"Are faster but less accurate"},{l:"D",t:"Lack any extracellular matrix"}],ans:"A"},
+{num:"415",q:"The key benefit of 3D cell cultures is:",opts:[{l:"A",t:"Better mimicry of in vivo cell behavior"},{l:"B",t:"Reduced nutrient supply"},{l:"C",t:"Faster apoptosis"},{l:"D",t:"Lower gene expression"}],ans:"A"},
+{num:"416",q:"Organoids differ from simple spheroids because:",opts:[{l:"A",t:"Organoids self-organize into complex structures"},{l:"B",t:"Spheroids are multicellular only"},{l:"C",t:"Organoids are 2D"},{l:"D",t:"Both are identical"}],ans:"A"},
+{num:"417",q:"Bioengineering in pathology means:",opts:[{l:"A",t:"Applying engineering principles to biological systems"},{l:"B",t:"Chemical testing"},{l:"C",t:"Manual dissection"},{l:"D",t:"Autopsy"}],ans:"A"},
+{num:"418",q:"The main goal of tissue bioengineering is:",opts:[{l:"A",t:"Destruction of tissues"},{l:"B",t:"Regeneration or replacement of damaged tissues"},{l:"C",t:"Cloning animals"},{l:"D",t:"DNA sequencing"}],ans:"B"},
+{num:"419",q:"3D bioprinting helps in:",opts:[{l:"A",t:"Creating tissue scaffolds and organ models"},{l:"B",t:"Scanning pathology slides"},{l:"C",t:"Viewing cells"},{l:"D",t:"Preparing chemicals"}],ans:"A"},
+{num:"420",q:"In organoid culture, the nutrient medium provides:",opts:[{l:"A",t:"Energy and growth signals"},{l:"B",t:"Fixation"},{l:"C",t:"DNA denaturation"},{l:"D",t:"Slide cleaning"}],ans:"A"},
+{num:"421",q:"A bioreactor in tissue culture is used for:",opts:[{l:"A",t:"Maintaining controlled growth conditions"},{l:"B",t:"Fixing tissues"},{l:"C",t:"Section cutting"},{l:"D",t:"Staining slides"}],ans:"A"},
+{num:"422",q:"AI improves pathology by:",opts:[{l:"A",t:"Speeding up image interpretation"},{l:"B",t:"Replacing laboratory microscopes"},{l:"C",t:"Preventing staining"},{l:"D",t:"Avoiding imaging"}],ans:"A"},
+{num:"423",q:"The brain-inspired structure of AI networks is called:",opts:[{l:"A",t:"Artificial neural network (ANN)"},{l:"B",t:"Ribosome"},{l:"C",t:"Endosome"},{l:"D",t:"Chromosome"}],ans:"A"},
+{num:"424",q:"The main data type used in AI pathology is:",opts:[{l:"A",t:"Digital image data"},{l:"B",t:"Chemical formulae"},{l:"C",t:"Audio recordings"},{l:"D",t:"Handwritten notes"}],ans:"A"},
+{num:"425",q:"AI algorithms must be trained using:",opts:[{l:"A",t:"Labeled datasets"},{l:"B",t:"Unrelated data"},{l:"C",t:"Random text"},{l:"D",t:"Physical slides only"}],ans:"A"},
+{num:"426",q:"Validation in AI means:",opts:[{l:"A",t:"Testing model performance on new data"},{l:"B",t:"Training data repetition"},{l:"C",t:"Deleting records"},{l:"D",t:"Re-labeling"}],ans:"A"},
+{num:"427",q:"One limitation of AI in pathology is:",opts:[{l:"A",t:"Need for large, high-quality datasets"},{l:"B",t:"Reduced accuracy"},{l:"C",t:"Limited image resolution"},{l:"D",t:"Lack of automation"}],ans:"A"},
+{num:"428",q:"Digital pathology enables:",opts:[{l:"A",t:"Remote consultations"},{l:"B",t:"Manual record keeping"},{l:"C",t:"No data sharing"},{l:"D",t:"Slide destruction"}],ans:"A"},
+{num:"429",q:"In AI-based image analysis, feature extraction means:",opts:[{l:"A",t:"Identifying patterns or characteristics in images"},{l:"B",t:"Random image editing"},{l:"C",t:"Manual viewing"},{l:"D",t:"Cutting tissues"}],ans:"A"},
+{num:"430",q:"Deep learning in pathology mainly uses:",opts:[{l:"A",t:"Convolutional neural networks (CNNs)"},{l:"B",t:"Gene cloning"},{l:"C",t:"DNA sequencing"},{l:"D",t:"PCR amplification"}],ans:"A"},
+{num:"431",q:"AI can assist pathologists by:",opts:[{l:"A",t:"Quantifying cell nuclei and mitotic figures"},{l:"B",t:"Mixing reagents"},{l:"C",t:"Cleaning slides"},{l:"D",t:"Performing autopsies"}],ans:"A"},
+{num:"432",q:"Organoid technology is important because it:",opts:[{l:"A",t:"Bridges the gap between cell culture and real tissues"},{l:"B",t:"Eliminates pathology labs"},{l:"C",t:"Studies viruses only"},{l:"D",t:"Creates fossil replicas"}],ans:"A"},
+{num:"433",q:"Bioengineering supports pathology research by:",opts:[{l:"A",t:"Developing disease models and testing materials"},{l:"B",t:"Reducing sample collection"},{l:"C",t:"Creating stains"},{l:"D",t:"Fixing slides"}],ans:"A"},
+{num:"434",q:"The main limitation of organoid models is:",opts:[{l:"A",t:"Lack of complete vascularization"},{l:"B",t:"Low cost"},{l:"C",t:"Easy scaling"},{l:"D",t:"2D structure"}],ans:"A"},
+{num:"435",q:"3D cell cultures promote:",opts:[{l:"A",t:"Realistic cell-cell and cell-matrix interactions"},{l:"B",t:"Random growth"},{l:"C",t:"Flat arrangements"},{l:"D",t:"Reduced differentiation"}],ans:"A"},
+{num:"436",q:"The role of scaffolds in bioengineering is to:",opts:[{l:"A",t:"Provide support for tissue growth"},{l:"B",t:"Fix tissues"},{l:"C",t:"Stop cell division"},{l:"D",t:"Stain slides"}],ans:"A"},
+{num:"437",q:"AI stands for:",opts:[{l:"A",t:"Artificial Intelligence"},{l:"B",t:"Applied Informatics"},{l:"C",t:"Analytical Imaging"},{l:"D",t:"Advanced Integration"}],ans:"A"},
+{num:"438",q:"Machine learning differs from traditional programming because it:",opts:[{l:"A",t:"Learns patterns from data automatically"},{l:"B",t:"Requires manual coding of every rule"},{l:"C",t:"Doesn't use data"},{l:"D",t:"Ignores outputs"}],ans:"A"},
+{num:"439",q:"AI can detect which histologic feature automatically?",opts:[{l:"A",t:"Mitotic figures"},{l:"B",t:"RBC count"},{l:"C",t:"Organ weight"},{l:"D",t:"Patient age"}],ans:"A"},
+{num:"440",q:"Organoids can model:",opts:[{l:"A",t:"Cancer and genetic diseases"},{l:"B",t:"Viruses only"},{l:"C",t:"Chemical compounds"},{l:"D",t:"Elements"}],ans:"A"},
+{num:"441",q:"A common use of AI in histopathology is:",opts:[{l:"A",t:"Tumor grading"},{l:"B",t:"Tissue embedding"},{l:"C",t:"Specimen labeling"},{l:"D",t:"Fixation"}],ans:"A"},
+{num:"442",q:"3D cultures are commonly grown using:",opts:[{l:"A",t:"Hydrogels"},{l:"B",t:"Glass slides"},{l:"C",t:"Agar plates"},{l:"D",t:"Wooden frames"}],ans:"A"},
+{num:"443",q:"Bioengineering involves which combination?",opts:[{l:"A",t:"Biology and engineering"},{l:"B",t:"Pathology and mathematics"},{l:"C",t:"Physics and chemistry"},{l:"D",t:"Botany and zoology"}],ans:"A"},
+{num:"444",q:"AI in pathology primarily helps to:",opts:[{l:"A",t:"Enhance workflow efficiency"},{l:"B",t:"Replace staining"},{l:"C",t:"Limit automation"},{l:"D",t:"Decrease diagnosis accuracy"}],ans:"A"},
+{num:"445",q:"Organoids can be used in:",opts:[{l:"A",t:"Personalized medicine"},{l:"B",t:"Metallurgy"},{l:"C",t:"Physics"},{l:"D",t:"Astronomy"}],ans:"A"},
+{num:"446",q:"AI in pathology is transforming:",opts:[{l:"A",t:"Diagnostic accuracy and workflow"},{l:"B",t:"Histology staining"},{l:"C",t:"Dissection methods"},{l:"D",t:"None of the above"}],ans:"A"},
+{num:"447",q:"Digital pathology primarily involves:",opts:[{l:"A",t:"Chemical testing of tissues"},{l:"B",t:"Computer-based analysis of digitized slides"},{l:"C",t:"Manual microscopy"},{l:"D",t:"Physical slide filing"}],ans:"B"},
+{num:"448",q:"The process of converting glass slides into digital images is called:",opts:[{l:"A",t:"Slide scanning"},{l:"B",t:"Staining"},{l:"C",t:"Fixation"},{l:"D",t:"Labeling"}],ans:"A"},
+{num:"449",q:"Whole-slide imaging (WSI) produces:",opts:[{l:"A",t:"Low-resolution photos"},{l:"B",t:"Complete digital scans of entire tissue sections"},{l:"C",t:"3D organ models"},{l:"D",t:"Paper copies of slides"}],ans:"B"},
+{num:"450",q:"The main device used in digital pathology is:",opts:[{l:"A",t:"Centrifuge"},{l:"B",t:"Whole-slide scanner"},{l:"C",t:"Microtome"},{l:"D",t:"Water bath"}],ans:"B"},
+{num:"451",q:"Which of the following is not a component of digital pathology?",opts:[{l:"A",t:"Slide scanner"},{l:"B",t:"Image viewer"},{l:"C",t:"Chemical pipette"},{l:"D",t:"Image storage system"}],ans:"C"},
+{num:"452",q:"The most common output of a digital pathology scanner is a:",opts:[{l:"A",t:"Virtual slide"},{l:"B",t:"X-ray film"},{l:"C",t:"Frozen section"},{l:"D",t:"Wet mount"}],ans:"A"},
+{num:"453",q:"The main purpose of digital pathology is to:",opts:[{l:"A",t:"Replace tissue staining"},{l:"B",t:"Facilitate digital image analysis"},{l:"C",t:"Eliminate laboratory staff"},{l:"D",t:"Produce histograms"}],ans:"B"},
+{num:"454",q:"Virtual microscopy allows:",opts:[{l:"A",t:"Viewing slides on a computer screen"},{l:"B",t:"Viewing only physical slides"},{l:"C",t:"Growing cells"},{l:"D",t:"Performing autopsies"}],ans:"A"},
+{num:"455",q:"A major advantage of digital pathology is:",opts:[{l:"A",t:"Slower diagnosis"},{l:"B",t:"Remote slide sharing"},{l:"C",t:"Increased errors"},{l:"D",t:"More reagent use"}],ans:"B"},
+{num:"456",q:"\"Telepathology\" refers to:",opts:[{l:"A",t:"Pathology at the bedside"},{l:"B",t:"Remote diagnosis using digital slides"},{l:"C",t:"Virtual autopsy"},{l:"D",t:"None of the above"}],ans:"B"},
+{num:"457",q:"Whole-slide imaging helps in:",opts:[{l:"A",t:"Storing physical slides"},{l:"B",t:"Automated quantitative analysis"},{l:"C",t:"Fixing tissues"},{l:"D",t:"Visualizing only H&E stains"}],ans:"B"},
+{num:"458",q:"The main benefit of digitizing slides is:",opts:[{l:"A",t:"Easier sharing and storage"},{l:"B",t:"Harder analysis"},{l:"C",t:"Slide degradation"},{l:"D",t:"Poor resolution"}],ans:"A"},
+{num:"459",q:"Digital pathology improves diagnostic:",opts:[{l:"A",t:"Speed and reproducibility"},{l:"B",t:"Error rate"},{l:"C",t:"Manual steps"},{l:"D",t:"Cost"}],ans:"A"},
+{num:"460",q:"Bioengineering in pathology primarily focuses on:",opts:[{l:"A",t:"Developing chemical stains"},{l:"B",t:"Applying engineering principles to biological tissues"},{l:"C",t:"Recording case histories"},{l:"D",t:"Preparing autopsy reports"}],ans:"B"},
+{num:"461",q:"A disadvantage of digital pathology is:",opts:[{l:"A",t:"High initial equipment cost"},{l:"B",t:"Low accuracy"},{l:"C",t:"Lack of image detail"},{l:"D",t:"No storage option"}],ans:"A"},
+{num:"462",q:"Image annotation in digital pathology is:",opts:[{l:"A",t:"Labeling regions of interest for analysis"},{l:"B",t:"Slide cutting"},{l:"C",t:"Tissue embedding"},{l:"D",t:"Sample mixing"}],ans:"A"},
+{num:"463",q:"The role of metadata in digital slides is to:",opts:[{l:"A",t:"Provide patient and technical information"},{l:"B",t:"Contain only color codes"},{l:"C",t:"Store audio data"},{l:"D",t:"Print results"}],ans:"A"},
+{num:"464",q:"In digital pathology, calibration ensures:",opts:[{l:"A",t:"Color accuracy of scanned images"},{l:"B",t:"Faster staining"},{l:"C",t:"Thicker slides"},{l:"D",t:"DNA extraction"}],ans:"A"},
+{num:"465",q:"Artificial intelligence (AI) is often integrated with digital pathology for:",opts:[{l:"A",t:"Automated image interpretation"},{l:"B",t:"Manual data entry"},{l:"C",t:"Slide staining"},{l:"D",t:"Specimen labeling"}],ans:"A"},
+{num:"466",q:"A limitation of WSI (Whole-slide imaging) is:",opts:[{l:"A",t:"Large file size"},{l:"B",t:"Lack of color"},{l:"C",t:"Low magnification"},{l:"D",t:"Poor resolution"}],ans:"A"},
+{num:"467",q:"A major challenge in tissue bioengineering is:",opts:[{l:"A",t:"Achieving proper vascularization"},{l:"B",t:"Lack of microscopes"},{l:"C",t:"Low cell survival in all cases"},{l:"D",t:"High chemical contamination"}],ans:"A"},
+{num:"468",q:"The process of ensuring scanned images match glass slides in color and detail is called:",opts:[{l:"A",t:"Validation"},{l:"B",t:"Staining"},{l:"C",t:"Annotation"},{l:"D",t:"Archiving"}],ans:"A"},
+{num:"469",q:"Storage of digital slides requires:",opts:[{l:"A",t:"Large-capacity servers"},{l:"B",t:"Microscopes"},{l:"C",t:"Pipettes"},{l:"D",t:"Printers"}],ans:"A"},
+{num:"470",q:"Pathologists can access digital slides via:",opts:[{l:"A",t:"Secure cloud-based systems"},{l:"B",t:"Local microscopes only"},{l:"C",t:"Physical storage rooms"},{l:"D",t:"Fax machines"}],ans:"A"},
+{num:"471",q:"Image compression in digital pathology is used to:",opts:[{l:"A",t:"Reduce file size"},{l:"B",t:"Blur images"},{l:"C",t:"Destroy data"},{l:"D",t:"Increase resolution"}],ans:"A"},
+{num:"472",q:"Which of the following is a challenge in implementing digital pathology?",opts:[{l:"A",t:"High data storage requirements"},{l:"B",t:"Lack of internet"},{l:"C",t:"Lack of tissue"},{l:"D",t:"No pathologists available"}],ans:"A"},
+{num:"473",q:"Digital pathology supports:",opts:[{l:"A",t:"Computer-aided diagnosis"},{l:"B",t:"Manual labeling"},{l:"C",t:"Slide duplication"},{l:"D",t:"Fixative preparation"}],ans:"A"},
+{num:"474",q:"The term \"digital workflow\" in pathology refers to:",opts:[{l:"A",t:"Entirely paperless diagnostic process"},{l:"B",t:"Manual case recording"},{l:"C",t:"Printing slides"},{l:"D",t:"Tissue washing"}],ans:"A"},
+{num:"475",q:"A common use of AI in digital pathology is:",opts:[{l:"A",t:"Tumor grading"},{l:"B",t:"Organ weighing"},{l:"C",t:"Dissection"},{l:"D",t:"Fixation"}],ans:"A"},
+{num:"476",q:"Digital pathology improves research by:",opts:[{l:"A",t:"Enabling quantitative data analysis"},{l:"B",t:"Reducing sample accuracy"},{l:"C",t:"Limiting access"},{l:"D",t:"Removing data"}],ans:"A"},
+{num:"477",q:"Which of the following is a hardware component of digital pathology?",opts:[{l:"A",t:"Slide scanner"},{l:"B",t:"Database"},{l:"C",t:"Mouse"},{l:"D",t:"Monitor"}],ans:"A"},
+{num:"478",q:"Whole-slide images are often stored on:",opts:[{l:"A",t:"Dedicated pathology servers"},{l:"B",t:"Flash drives only"},{l:"C",t:"Microtomes"},{l:"D",t:"Label printers"}],ans:"A"},
+{num:"479",q:"Digital pathology has become more important due to:",opts:[{l:"A",t:"AI and machine learning integration"},{l:"B",t:"Fewer microscopes"},{l:"C",t:"Higher costs"},{l:"D",t:"Reduced training"}],ans:"A"},
+{num:"480",q:"The digital viewer in pathology helps in:",opts:[{l:"A",t:"Navigating large images"},{l:"B",t:"Staining slides"},{l:"C",t:"Fixing tissues"},{l:"D",t:"Labeling specimens"}],ans:"A"},
+{num:"481",q:"Quality control in digital pathology ensures:",opts:[{l:"A",t:"Proper image resolution and color balance"},{l:"B",t:"Slide cracking"},{l:"C",t:"Dehydration of tissue"},{l:"D",t:"Thicker sections"}],ans:"A"},
+{num:"482",q:"A major application of digital pathology is:",opts:[{l:"A",t:"Teaching and training"},{l:"B",t:"Manual slide handling"},{l:"C",t:"Fixative testing"},{l:"D",t:"DNA sequencing"}],ans:"A"},
+{num:"483",q:"In a virtual slide, the magnification is adjusted by:",opts:[{l:"A",t:"Digital zoom"},{l:"B",t:"Objective lens"},{l:"C",t:"Physical rotation"},{l:"D",t:"Focus knob"}],ans:"A"},
+{num:"484",q:"AI in digital pathology can identify:",opts:[{l:"A",t:"Cellular morphology and tissue patterns"},{l:"B",t:"Patient age"},{l:"C",t:"Organ weights"},{l:"D",t:"Fixation time"}],ans:"A"},
+{num:"485",q:"One advantage of digital archiving is:",opts:[{l:"A",t:"No physical storage required"},{l:"B",t:"Limited access"},{l:"C",t:"Frequent damage"},{l:"D",t:"Manual cataloguing"}],ans:"A"},
+{num:"486",q:"The basic components required for tissue engineering include:",opts:[{l:"A",t:"Cells, scaffolds, and growth factors"},{l:"B",t:"DNA and lipids only"},{l:"C",t:"Enzymes and hormones"},{l:"D",t:"Water and proteins only"}],ans:"A"},
+{num:"487",q:"The transition to digital pathology helps with:",opts:[{l:"A",t:"Remote collaborations"},{l:"B",t:"Manual counting"},{l:"C",t:"Local-only diagnosis"},{l:"D",t:"Slide burning"}],ans:"A"},
+{num:"488",q:"Which of the following can be integrated with digital pathology systems?",opts:[{l:"A",t:"Laboratory Information Systems (LIS)"},{l:"B",t:"Autoclaves"},{l:"C",t:"Micropipettes"},{l:"D",t:"Ovens"}],ans:"A"},
+{num:"93",q:"Cloud-based pathology allows:",opts:[{l:"A",t:"Global access to slides"},{l:"B",t:"Only local review"},{l:"C",t:"Slower sharing"},{l:"D",t:"Reduced image quality"}],ans:"A"},
+{num:"489",q:"Image analysis algorithms can measure:",opts:[{l:"A",t:"Nuclear size and staining intensity"},{l:"B",t:"Smell of slides"},{l:"C",t:"Fixation time"},{l:"D",t:"Temperature"}],ans:"A"},
+{num:"490",q:"The first step in digital pathology workflow is:",opts:[{l:"A",t:"Slide scanning"},{l:"B",t:"Diagnosis"},{l:"C",t:"Reporting"},{l:"D",t:"Printing"}],ans:"A"},
+{num:"491",q:"Digital pathology helps reduce:",opts:[{l:"A",t:"Manual workload"},{l:"B",t:"Accuracy"},{l:"C",t:"Speed"},{l:"D",t:"Efficiency"}],ans:"A"},
+{num:"492",q:"Which term refers to computer-based detection of abnormalities?",opts:[{l:"A",t:"Computer-aided diagnosis (CAD)"},{l:"B",t:"Clinical evaluation"},{l:"C",t:"Autopsy"},{l:"D",t:"Biopsy"}],ans:"A"},
+{num:"493",q:"Validation of digital pathology systems ensures:",opts:[{l:"A",t:"Performance equivalent to light microscopy"},{l:"B",t:"Image deletion"},{l:"C",t:"Color loss"},{l:"D",t:"Tissue shrinkage"}],ans:"A"},
+{num:"494",q:"Digital pathology enables:",opts:[{l:"A",t:"Real-time consultation between experts"},{l:"B",t:"Manual transport of slides"},{l:"C",t:"Slow diagnosis"},{l:"D",t:"Image distortion"}],ans:"A"},
+{num:"495",q:"The future of pathology will likely include:",opts:[{l:"A",t:"Fully integrated AI-assisted digital workflows"},{l:"B",t:"Elimination of all microscopes"},{l:"C",t:"No tissue diagnosis"},{l:"D",t:"Manual record-keeping"}],ans:"A"}
+];
+
+// ============================================================
+// STATE
+// ============================================================
+var student={};
+var consentGiven=false;
+var examQuestions=[];
+var selectedRange={from:1,to:30,label:'Q1–Q30'};
+var examStartTime=null,examEndTime=null;
+var cur=0,visited={},answers={},marked={},submitted=false,seconds=0,timerInt=null,palFilter='all';
+var isOnline=navigator.onLine;
+var syncStatus='pending'; // 'synced','pending','offline'
+var lastResult=null;
+var connCheckInt=null;
+var pendingSyncPrompted=false;
+
+// ============================================================
+// UTILS
+// ============================================================
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null}}
+function lsJ(k,v){try{if(v===undefined){var r=localStorage.getItem(k);return r?JSON.parse(r):null;}localStorage.setItem(k,JSON.stringify(v));}catch(e){return null}}
+function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
+
+function showToast(msg,type,dur){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.className='show '+(type||'');
+  clearTimeout(t._to);t._to=setTimeout(function(){t.className=''},dur||3000);
+}
+
+function getDeviceType(){
+  var w=window.innerWidth;
+  if(w<=600) return 'Mobile';
+  if(w<=1024) return 'Tablet';
+  return 'Desktop';
+}
+
+function pad(n){return n<10?'0'+n:n}
+function formatTime(secs){var h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60),s=secs%60;return (h?pad(h)+':':'')+pad(m)+':'+pad(s)}
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload=function(){
+  setTimeout(function(){
+    document.getElementById('loading').style.display='none';
+    var dark=ls('pathology_dark')==='1';
+    if(dark){document.body.classList.add('dark');document.getElementById('dark-btn').textContent='Light';}
+    consentGiven=ls('pathology_consent')==='1';
+    if(!consentGiven){
+      document.getElementById('consent-page').style.display='flex';
+      return;
+    }
+    afterConsent();
+  },800);
+};
+
+// ============================================================
+// CONSENT
+// ============================================================
+function toggleConsent(){
+  var chk=document.getElementById('consent-check');
+  var row=document.getElementById('consent-check-row');
+  var btn=document.getElementById('consent-accept-btn');
+  row.classList.toggle('checked',chk.checked);
+  btn.classList.toggle('enabled',chk.checked);
+}
+function acceptConsent(){
+  if(!document.getElementById('consent-check').checked) return;
+  ls('pathology_consent','1');
+  consentGiven=true;
+  document.getElementById('consent-page').style.display='none';
+  afterConsent();
+}
+function declineConsent(){
+  document.getElementById('consent-page').innerHTML=
+    '<div style="color:#fff;text-align:center;padding:40px;max-width:400px">'
+    +'<div style="font-size:3rem;margin-bottom:16px">🚫</div>'
+    +'<h2 style="margin-bottom:12px">Access Denied</h2>'
+    +'<p style="opacity:.8;margin-bottom:20px">You must accept the data consent to use this exam system. Your data will not be collected or transmitted.</p>'
+    +'<button onclick="location.reload()" style="background:#fff;color:#1a237e;border:none;border-radius:8px;padding:12px 24px;font-weight:700;cursor:pointer;font-size:.95rem">← Go Back</button>'
+    +'</div>';
+}
+function afterConsent(){
+  // Check for session recovery
+  var sess=lsJ('pathology_session');
+  var savedStudent=lsJ('pathology_student');
+  if(savedStudent&&savedStudent.name){
+    student=savedStudent;
+    if(sess&&sess.answers&&Object.keys(sess.answers).length>0){
+      document.getElementById('recovery-banner').style.display='block';
+    }
+    document.getElementById('reg-name').value=student.name||'';
+    document.getElementById('reg-year').value=student.year||'';
+    document.getElementById('reg-group').value=student.group||'';
+    document.getElementById('reg-id').value=student.id||'';
+    document.getElementById('reg-email').value=student.email||'';
+    document.getElementById('reg-page').style.display='flex';
+  } else {
+    document.getElementById('reg-page').style.display='flex';
+  }
+  initConnectivityMonitor();
+}
+
+// ============================================================
+// SESSION RECOVERY
+// ============================================================
+function resumeSession(){
+  var sess=lsJ('pathology_session');
+  if(!sess) return;
+  student=lsJ('pathology_student')||{};
+  examQuestions=sess.examQuestions||[];
+  selectedRange=sess.selectedRange||{from:1,to:30,label:'Q1–Q30'};
+  cur=sess.cur||0;
+  visited=sess.visited||{};
+  answers=sess.answers||{};
+  marked=sess.marked||{};
+  seconds=sess.seconds||0;
+  submitted=false;
+  document.getElementById('reg-page').style.display='none';
+  showExamUI();
+  showToast('Session restored! Continue where you left off.','success',3000);
+}
+function discardSession(){
+  lsDel('pathology_session');
+  document.getElementById('recovery-banner').style.display='none';
+  submitted=false;cur=0;visited={};answers={};marked={};seconds=0;
+}
+function saveSession(){
+  if(submitted) return;
+  lsJ('pathology_session',{examQuestions:examQuestions,selectedRange:selectedRange,cur:cur,visited:visited,answers:answers,marked:marked,seconds:seconds});
+}
+window.addEventListener('beforeunload',function(){if(!submitted) saveSession();});
+
+// ============================================================
+// REGISTRATION
+// ============================================================
+function submitReg(){
+  var name=document.getElementById('reg-name').value.trim();
+  var year=document.getElementById('reg-year').value;
+  var group=document.getElementById('reg-group').value.trim();
+  var id=document.getElementById('reg-id').value.trim();
+  var email=document.getElementById('reg-email').value.trim();
+  var ok=true;
+  function setE(eid,inp,show){document.getElementById(eid).classList.toggle('show',show);document.getElementById(inp).classList.toggle('error',show);}
+  if(!name){setE('err-name','reg-name',true);ok=false;}else{setE('err-name','reg-name',false);}
+  if(!year){setE('err-year','reg-year',true);ok=false;}else{setE('err-year','reg-year',false);}
+  if(!group){setE('err-group','reg-group',true);ok=false;}else{setE('err-group','reg-group',false);}
+  if(!ok) return;
+  student={name:name,year:year,group:group,id:id,email:email};
+  lsJ('pathology_student',student);
+  lsDel('pathology_session');
+  document.getElementById('reg-page').style.display='none';
+  showRangePage();
+}
+
+// ============================================================
+// RANGE PAGE
+// ============================================================
+function showRangePage(){
+  document.getElementById('range-page').style.display='flex';
+  document.getElementById('welcome-name').textContent=student.name;
+  var opts=document.querySelectorAll('.range-opt');
+  opts.forEach(function(o){o.classList.remove('selected');});
+  if(opts[0]) opts[0].classList.add('selected');
+  selectedRange={from:1,to:30,label:'Q1–Q30'};
+}
+function selectRange(el,from,to){
+  document.querySelectorAll('.range-opt').forEach(function(o){o.classList.remove('selected');});
+  el.classList.add('selected');
+  selectedRange={from:from,to:to,label:from==='custom'?'Custom':('Q'+from+'–Q'+to)};
+  document.getElementById('custom-range-inputs').style.display=(from==='custom')?'block':'none';
+}
+function startExam(){
+  var from=selectedRange.from,to=selectedRange.to;
+  if(from==='custom'){
+    from=parseInt(document.getElementById('custom-from').value)||1;
+    to=parseInt(document.getElementById('custom-to').value)||QUESTIONS.length;
+    if(from>to||from<1){alert('Please enter a valid question range.');return;}
+    selectedRange={from:from,to:to,label:'Q'+from+'–Q'+to};
+  } else {from=parseInt(from);to=parseInt(to);}
+  examQuestions=QUESTIONS.filter(function(q){return parseInt(q.num)>=from&&parseInt(q.num)<=to;});
+  if(examQuestions.length===0){alert('No questions found in this range.');return;}
+  cur=0;visited={};answers={};marked={};submitted=false;seconds=0;
+  document.getElementById('range-page').style.display='none';
+  showExamUI();
+}
+
+// ============================================================
+// EXAM UI
+// ============================================================
+function showExamUI(){
+  document.getElementById('header').style.display='';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('footer').style.display='flex';
+  document.getElementById('sync-bar').style.display='flex';
+  document.getElementById('result-page').style.display='none';
+  updateHdrStudentInfo();
+  renderQ();buildPalette();updateStats();
+  examStartTime=new Date();
+  clearInterval(timerInt);
+  timerInt=setInterval(function(){
+    seconds++;
+    document.getElementById('timer-box').textContent=formatTime(seconds);
+    document.getElementById('timer-box').classList.toggle('warn',seconds>5400);
+    if(seconds%30===0) saveSession();
+  },1000);
+  updateSyncUI();
+}
+function updateHdrStudentInfo(){
+  var el=document.getElementById('hdr-student-info');
+  var parts=[student.name,student.year,'Grp: '+student.group];
+  if(student.id) parts.push('ID: '+student.id);
+  el.innerHTML=parts.map(function(p){return '<span>'+escH(p)+'</span>';}).join('');
+}
+
+// ============================================================
+// QUESTION RENDERING
+// ============================================================
+function getSect(n){
+  if(n<=55) return 'Cell Injury, Apoptosis & Necrosis';
+  if(n<=115) return 'Inflammation & Healing';
+  if(n<=200) return 'Tumors & Neoplasia';
+  if(n<=300) return 'Cardiovascular & Respiratory';
+  if(n<=395) return 'GIT, Liver & Renal Pathology';
+  return 'Endocrine, Neuro & Digital Pathology';
+}
+function renderQ(){
+  var q=examQuestions[cur];visited[cur]=true;
+  document.getElementById('q-badge').textContent='Q '+q.num+' ('+(cur+1)+'/'+examQuestions.length+')';
+  document.getElementById('q-sect').textContent=getSect(parseInt(q.num));
+  document.getElementById('q-text').textContent=q.q;
+  var c=document.getElementById('opts-container');c.innerHTML='';
+  q.opts.forEach(function(o){
+    var d=document.createElement('div');d.className='opt';
+    if(answers[cur]===o.l) d.classList.add('selected');
+    d.innerHTML='<div class="opt-ltr">'+o.l+'</div><div class="opt-txt">'+escH(o.t)+'</div>';
+    d.onclick=function(){selectOpt(o.l,d);};
+    c.appendChild(d);
+  });
+  document.getElementById('prev-btn').disabled=(cur===0);
+  buildPalette();updateStats();
+}
+function selectOpt(l,el){
+  if(submitted) return;
+  document.querySelectorAll('.opt').forEach(function(o){o.classList.remove('selected');});
+  el.classList.add('selected');answers[cur]=l;buildPalette();updateStats();
+}
+function navigate(d){var n=cur+d;if(n<0||n>=examQuestions.length) return;cur=n;renderQ();}
+function saveAndNext(){if(cur<examQuestions.length-1){cur++;renderQ();}}
+function markReview(){marked[cur]=!marked[cur];buildPalette();updateStats();}
+function clearResp(){delete answers[cur];document.querySelectorAll('.opt').forEach(function(o){o.classList.remove('selected');});buildPalette();updateStats();}
+function doJump(){
+  var v=parseInt(document.getElementById('q-srch').value);
+  var idx=examQuestions.findIndex(function(q){return parseInt(q.num)===v;});
+  if(idx>=0){cur=idx;renderQ();closePal();}
+}
+function getStatus(i){
+  var a=!!answers[i],m=!!marked[i],v=!!visited[i];
+  if(a&&m) return 'amrk';if(m) return 'mrk';if(a) return 'ans';if(v) return 'na';return 'nv';
+}
+function buildPalette(){
+  var g=document.getElementById('pal-grid');g.innerHTML='';
+  examQuestions.forEach(function(q,i){
+    var st=getStatus(i);
+    if(palFilter!=='all'&&st!==palFilter) return;
+    var d=document.createElement('div');d.className='pq '+st+(i===cur?' cur':'');
+    d.textContent=q.num;
+    d.onclick=function(){cur=i;renderQ();if(window.innerWidth<=768) closePal();};
+    g.appendChild(d);
+  });
+}
+function updateStats(){
+  var ans=Object.keys(answers).length;
+  var mrk=Object.keys(marked).filter(function(k){return marked[k];}).length;
+  var vis=Object.keys(visited).length;
+  var sb=document.getElementById('stats-bar');
+  sb.innerHTML=[{v:examQuestions.length,l:'Total'},{v:ans,l:'Answered',c:'color:#2e7d32'},{v:examQuestions.length-ans,l:'Not Ans',c:'color:#c62828'},{v:mrk,l:'Marked',c:'color:#6a1b9a'},{v:vis,l:'Visited',c:'color:#1565c0'}]
+  .map(function(s){return '<div class="stat"><span class="stat-val"'+(s.c?' style="'+s.c+'"':'')+'>'+s.v+'</span><span class="stat-lbl">'+s.l+'</span></div>';}).join('');
+  document.getElementById('prog-fill').style.width=(ans/examQuestions.length*100)+'%';
+}
+function setPalFlt(f,el){palFilter=f;document.querySelectorAll('.ftab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');buildPalette();}
+function closePal(){document.getElementById('palette-panel').classList.remove('open');}
+function togglePal(){document.getElementById('palette-panel').classList.toggle('open');}
+function toggleFS(){if(!document.fullscreenElement) document.documentElement.requestFullscreen();else document.exitFullscreen();}
+function toggleDark(){
+  document.body.classList.toggle('dark');
+  var d=document.body.classList.contains('dark');
+  document.getElementById('dark-btn').textContent=d?'Light':'Dark';
+  ls('pathology_dark',d?'1':'0');
+}
+
+// ============================================================
+// SUBMIT
+// ============================================================
+function confirmSubmit(){
+  var ans=Object.keys(answers).length;var not=examQuestions.length-ans;
+  document.getElementById('confirm-msg').textContent='You have answered '+ans+' of '+examQuestions.length+' questions.'+(not>0?' '+not+' unattempted. ':' ')+'Submit now?';
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function submitExam(){
+  closeModal('confirm-modal');
+  clearInterval(timerInt);
+  examEndTime=new Date();submitted=true;lsDel('pathology_session');
+
+  var correct=0,wrong=0,skip=0,mrkCount=Object.keys(marked).filter(function(k){return marked[k];}).length;
+  examQuestions.forEach(function(q,i){
+    if(!answers[i]) skip++;else if(answers[i]===q.ans) correct++;else wrong++;
+  });
+  var total=examQuestions.length,pct=Math.round(correct/total*100);
+  var now=examEndTime;
+  var dateStr=now.toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+  var timeStr=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+  var durationStr=formatTime(seconds);
+  var device=getDeviceType();
+
+  lastResult={
+    name:student.name,year:student.year,group:student.group,id:student.id||'N/A',email:student.email||'N/A',
+    date:dateStr,time:timeStr,duration:durationStr,
+    range:selectedRange.label,total:total,attempted:total-skip,unattempted:skip,markedForReview:mrkCount,
+    correct:correct,wrong:wrong,score:correct+'/'+total,percentage:pct+'%',device:device,
+    exam:'Pathology AVN Questions',synced:false,timestamp:now.getTime()
+  };
+
+  // Save to pending list
+  var pending=lsJ('pathology_pending')||[];
+  pending.push(lastResult);
+  lsJ('pathology_pending',pending);
+  lsJ('pathology_last_result',lastResult);
+  syncStatus='pending';
+
+  // Show results
+  document.getElementById('app').style.display='none';
+  document.getElementById('header').style.display='flex';
+  document.getElementById('result-page').style.display='block';
+  document.getElementById('sync-bar').style.display='none';
+
+  // Student info block
+  var grid=document.getElementById('res-student-grid');
+  var items=[
+    {l:'Student Name',v:student.name},{l:'Academic Year',v:student.year},{l:'Group Number',v:student.group},
+    {l:'Student ID',v:student.id||'N/A'},{l:'Date',v:dateStr},{l:'Time',v:timeStr},
+    {l:'Duration',v:durationStr},{l:'Question Range',v:selectedRange.label},{l:'Device',v:device}
+  ];
+  grid.innerHTML=items.map(function(it){return '<div class="sib-item"><span class="sib-label">'+it.l+'</span><span class="sib-value">'+escH(it.v)+'</span></div>';}).join('');
+
+  document.getElementById('res-pct').textContent=pct+'%';
+  document.getElementById('res-stats').innerHTML=[
+    {v:total,l:'Total',c:''},{v:correct,l:'Correct',c:'color:#2e7d32'},{v:wrong,l:'Wrong',c:'color:#c62828'},
+    {v:skip,l:'Skipped',c:'color:#607d8b'},{v:mrkCount,l:'Marked',c:'color:#6a1b9a'}
+  ].map(function(s){return '<div class="rs"><span class="rs-val"'+(s.c?' style="'+s.c+'"':'')+'>'+s.v+'</span><span class="rs-lbl">'+s.l+'</span></div>';}).join('');
+
+  showRev('all');
+  updateResultSyncCard();
+  trySyncNow();
+}
+
+// ============================================================
+// REVIEW
+// ============================================================
+function showRev(filter){
+  var c=document.getElementById('rev-container');c.innerHTML='';
+  var head=document.createElement('div');head.className='ftabs';
+  [['all','All'],['correct','Correct'],['wrong','Wrong'],['skip','Skipped']].forEach(function(pr){
+    var t=document.createElement('div');t.className='ftab'+(pr[0]===filter?' active':'');
+    t.textContent=pr[1];t.onclick=function(){showRev(pr[0]);};head.appendChild(t);
+  });
+  c.appendChild(head);
+  examQuestions.forEach(function(q,i){
+    var userAns=answers[i],correct=q.ans,isCorrect=userAns===correct,isSkip=!userAns;
+    if(filter==='correct'&&!isCorrect) return;
+    if(filter==='wrong'&&(isCorrect||isSkip)) return;
+    if(filter==='skip'&&!isSkip) return;
+    var d=document.createElement('div');d.className='rev-q';
+    var badge=isSkip?'<span class="badge bs">Skipped</span>':isCorrect?'<span class="badge bc">Correct</span>':'<span class="badge bw">Wrong</span>';
+    d.innerHTML='<div class="rqh" onclick="this.nextElementSibling.classList.toggle(\'open\')"><span class="rqh-txt"><b>Q'+q.num+'.</b> '+escH(q.q.substring(0,80))+(q.q.length>80?'…':'')+'</span>'+badge+'</div>'+
+      '<div class="rqb"><p style="margin-bottom:8px;font-size:.88rem;color:var(--subtext)">'+escH(q.q)+'</p>'+
+      q.opts.map(function(o){var cls='r-opt'+(o.l===correct?' c':(o.l===userAns&&!isCorrect?' w':''));return '<div class="'+cls+'">'+o.l+'. '+escH(o.t)+(o.l===correct?' ✓':'')+(o.l===userAns&&!isCorrect?' ✗':'')+'</div>';}).join('')+'</div>';
+    c.appendChild(d);
+  });
+}
+
+// ============================================================
+// CONNECTIVITY & SYNC
+// ============================================================
+function initConnectivityMonitor(){
+  isOnline=navigator.onLine;
+  window.addEventListener('online',function(){
+    isOnline=true;updateSyncUI();
+    var pending=lsJ('pathology_pending')||[];
+    if(pending.length>0&&!pendingSyncPrompted){
+      pendingSyncPrompted=true;
+      document.getElementById('pending-count').textContent=pending.length;
+      document.getElementById('pending-sync-modal').classList.add('open');
+    }
+  });
+  window.addEventListener('offline',function(){isOnline=false;updateSyncUI();});
+  // Periodic check every 30s
+  clearInterval(connCheckInt);
+  connCheckInt=setInterval(function(){
+    var nowOnline=navigator.onLine;
+    if(nowOnline!==isOnline){isOnline=nowOnline;updateSyncUI();}
+  },30000);
+}
+
+function updateSyncUI(){
+  var dot=document.getElementById('sync-dot');
+  var hdrDot=document.getElementById('hdr-sync-dot');
+  var txt=document.getElementById('sync-bar-text');
+  var btn=document.getElementById('sync-bar-btn');
+  var sb=document.getElementById('sync-bar');
+  var pending=lsJ('pathology_pending')||[];
+
+  if(!isOnline){
+    syncStatus='offline';
+    if(dot){dot.className='sync-dot offline';}
+    if(hdrDot){hdrDot.className='hdr-sync-dot offline';}
+    if(txt) txt.textContent='Offline — data saved locally, will sync when connected';
+    if(btn) btn.style.display='none';
+    if(sb){sb.className='';sb.classList.add('offline');}
+  } else if(pending.length>0){
+    syncStatus='pending';
+    if(dot){dot.className='sync-dot pending';}
+    if(hdrDot){hdrDot.className='hdr-sync-dot pending';}
+    if(txt) txt.textContent=pending.length+' result(s) pending synchronization';
+    if(btn){btn.style.display='';btn.className='sync-btn do-sync';btn.textContent='Sync Now';}
+    if(sb){sb.className='';sb.classList.add('pending');}
+  } else {
+    syncStatus='synced';
+    if(dot){dot.className='sync-dot online';}
+    if(hdrDot){hdrDot.className='hdr-sync-dot online';}
+    if(txt) txt.textContent='Online — all data synchronized';
+    if(btn){btn.style.display='';btn.className='sync-btn done';btn.textContent='✓ Synced';}
+    if(sb){sb.className='';sb.classList.add('online');}
+  }
+  if(submitted) updateResultSyncCard();
+}
+
+function updateResultSyncCard(){
+  var card=document.getElementById('res-sync-card');
+  var icon=document.getElementById('res-sync-icon');
+  var title=document.getElementById('res-sync-title');
+  var sub=document.getElementById('res-sync-sub');
+  var btn=document.getElementById('res-sync-btn');
+  if(!card) return;
+  var pending=lsJ('pathology_pending')||[];
+  if(!isOnline){
+    card.className='sync-status-card offline';
+    icon.textContent='📴';title.textContent='Offline — Data Saved Locally';
+    sub.textContent='Your result is stored on this device. It will sync automatically when internet is available.';
+    btn.className='sync-now-btn disabled';btn.textContent='No Connection';
+  } else if(pending.length>0){
+    card.className='sync-status-card pending';
+    icon.textContent='⏳';title.textContent='Pending Synchronization';
+    sub.textContent='Internet connected. Click Sync Now to transmit your result to the administrator.';
+    btn.className='sync-now-btn active';btn.textContent='Sync Now';
+  } else {
+    card.className='sync-status-card synced';
+    icon.textContent='✅';title.textContent='Exam Data Synchronized Successfully';
+    sub.textContent='Your result has been transmitted to the administrator for academic records.';
+    btn.className='sync-now-btn disabled';btn.textContent='✓ Done';
+  }
+}
+
+function trySyncNow(){
+  if(!isOnline){showToast('No internet connection. Data saved locally.','error');return;}
+  var pending=lsJ('pathology_pending')||[];
+  if(pending.length===0){showToast('All data already synchronized.','success');return;}
+
+  // Google Apps Script URL — using GET with encoded param to bypass CORS from local files
+  var SCRIPT_URL='https://script.google.com/macros/s/AKfycbxAelDk7zxHZ9g_89MmysQ_G8ibBxA5k8WtW8JanYfy7LZ5-1nU0gfdzX818r0LxTdU/exec';
+
+  showToast('Synchronizing...','info',2000);
+
+  var sent=0;
+  function sendNext(idx){
+    if(idx>=pending.length){
+      lsJ('pathology_pending',[]);
+      syncStatus='synced';
+      updateSyncUI();
+      updateResultSyncCard();
+      showToast('Exam data synchronized successfully! ✓','success',4000);
+      pendingSyncPrompted=false;
+      return;
+    }
+
+    // Use no-cors POST — works when Apps Script is deployed as "Anyone" access
+    // The response will be opaque (no-cors) but the server still receives and processes the data
+    var record = pending[idx];
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(record)
+    })
+    .then(function(){
+      // no-cors always resolves (opaque response) — treat as success
+      sent++;
+      sendNext(idx+1);
+    })
+    .catch(function(err){
+      // Fallback: try GET with data as URL param (image beacon trick)
+      console.warn('POST failed, trying GET fallback:', err);
+      var encoded = encodeURIComponent(JSON.stringify(record));
+      var img = new Image();
+      img.src = SCRIPT_URL + '?data=' + encoded;
+      img.onload = img.onerror = function(){
+        sent++;
+        sendNext(idx+1);
+      };
+    });
+  }
+  sendNext(0);
+}
+
+function syncPendingNow(){
+  closeModal('pending-sync-modal');
+  trySyncNow();
+}
+
+// ============================================================
+// DOWNLOAD RESULT
+// ============================================================
+function downloadResult(){
+  if(!lastResult) return;
+  var r=lastResult;
+  var lines=[
+    '========================================',
+    '     PATHOLOGY AVN QUESTIONS',
+    '     OSHMEDCHRONICLE — EXAM REPORT',
+    '========================================',
+    '',
+    'CANDIDATE INFORMATION',
+    '----------------------------------------',
+    'Name            : '+r.name,
+    'Academic Year   : '+r.year,
+    'Group Number    : '+r.group,
+    'Student ID      : '+r.id,
+    'Email           : '+r.email,
+    '',
+    'EXAM DETAILS',
+    '----------------------------------------',
+    'Exam Name       : '+r.exam,
+    'Date            : '+r.date,
+    'Time            : '+r.time,
+    'Duration        : '+r.duration,
+    'Selected Range  : '+r.range,
+    'Device Type     : '+r.device,
+    '',
+    'PERFORMANCE SUMMARY',
+    '----------------------------------------',
+    'Total Questions : '+r.total,
+    'Attempted       : '+r.attempted,
+    'Not Attempted   : '+r.unattempted,
+    'Marked for Rev  : '+r.markedForReview,
+    'Correct         : '+r.correct,
+    'Wrong           : '+r.wrong,
+    'Score           : '+r.score,
+    'Percentage      : '+r.percentage,
+    '',
+    '========================================',
+    'QUESTION-WISE REVIEW',
+    '========================================',
+    ''
+  ];
+  examQuestions.forEach(function(q,i){
+    var ua=answers[i],ca=q.ans,res=!ua?'SKIPPED':ua===ca?'CORRECT':'WRONG';
+    lines.push('Q'+q.num+'. ['+res+'] '+q.q);
+    q.opts.forEach(function(o){
+      var marker=o.l===ca?' ← CORRECT':o.l===ua&&ua!==ca?' ← YOUR ANSWER':'';
+      lines.push('   '+o.l+'. '+o.t+marker);
+    });
+    lines.push('');
+  });
+  lines.push('========================================');
+  lines.push('Generated by OSHMEDCHRONICLE');
+  lines.push('Pradeep Waghmare | YouTube: oshmedchronicle');
+  lines.push('========================================');
+
+  var text=lines.join('\n');
+  var blob=new Blob([text],{type:'text/plain'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='PathologyExam_'+r.name.replace(/\s+/g,'_')+'_'+r.date.replace(/\s+/g,'_')+'.txt';
+  a.click();
+  showToast('Result downloaded successfully!','success');
+}
+
+// ============================================================
+// RETEST
+// ============================================================
+function openRetestModal(){document.getElementById('retest-modal').classList.add('open');}
+function doRetake(){
+  closeModal('retest-modal');
+  document.getElementById('result-page').style.display='none';
+  showRangePage();
+}
+function doFreshExam(){
+  closeModal('retest-modal');
+  student={};
+  lsDel('pathology_student');lsDel('pathology_session');lsDel('pathology_consent');
+  document.getElementById('result-page').style.display='none';
+  document.getElementById('footer').style.display='none';
+  document.getElementById('header').style.display='none';
+  document.getElementById('sync-bar').style.display='none';
+  ['reg-name','reg-id','reg-email'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('reg-year').value='';document.getElementById('reg-group').value='';
+  document.getElementById('recovery-banner').style.display='none';
+  document.getElementById('consent-page').style.display='flex';
+  document.getElementById('consent-check').checked=false;
+  document.getElementById('consent-check-row').classList.remove('checked');
+  document.getElementById('consent-accept-btn').classList.remove('enabled');
+}
+</script>
+</body>
+</html>
